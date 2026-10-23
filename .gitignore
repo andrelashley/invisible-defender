@@ -1,0 +1,31 @@
+﻿
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Node / Vite
+node_modules/
+dist/
+.npm-cache/
+
+# Local development / Codex
+.packages/
+.appdata/
+.dotnet/
+.dotnet-home/
+.local-appdata/
+
+# Secrets and environment configuration
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Logs and temporary files
+*.log
+*.tmp

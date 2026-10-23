@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../../tests/Analytics.Tests/Analytics.Tests.csproj" />
+  <Project Path="InvisibleDefender.Api.csproj" />
+</Solution>
