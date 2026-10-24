@@ -5,26 +5,51 @@ using Azure.Core;
 using InvisibleDefender.Domain;
 using InvisibleDefender.Narration;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 public static class NarrationChecks
 {
     public static async Task Run(Action<bool, string> check)
     {
+        var diagnosticLog = new DiagnosticLog();
+        var diagnosticOptions = new NarrationOptions();
+        var diagnostics = new NarrationDiagnostics(Options.Create(diagnosticOptions), diagnosticLog);
+        using (var activity = new Activity("diagnostic-test").SetIdFormat(ActivityIdFormat.W3C).Start()) {
+            diagnostics.Write("numeric_grounding", "analyst", "explanation", true);
+            check(diagnosticLog.Entries.Count == 0, "Narration: diagnostics disabled by default");
+            diagnosticOptions.DiagnosticsEnabled = true;
+            diagnostics.Write("numeric_grounding", "analyst", "explanation", true);
+            var entry = diagnosticLog.Entries.Single();
+            check(entry["Rule"]?.ToString() == "numeric_grounding" && entry["Field"]?.ToString() == "explanation" &&
+                entry["Audience"]?.ToString() == "analyst" && entry["FailureCategory"]?.ToString() == "validation" &&
+                entry["CorrelationId"]?.ToString() == activity.TraceId.ToString() &&
+                entry.Keys.Order().SequenceEqual(new[] { "Status", "FailureCategory", "Rule", "Field", "Audience", "CorrelationId", "{OriginalFormat}" }.Order()),
+                "Narration: opt-in diagnostics contain only safe structured fields and correlation");
+        }
         var insights = new DefensiveInsightEngine(new()).Analyze(Enumerable.Range(0, 120).Select(new SyntheticMatchGenerator().Generate));
         var insight = insights.First(i => i.InsightType == "PassingLaneDenial");
+        if (Environment.GetEnvironmentVariable("NARRATION_REPLAY_LOG") is string replayLog)
+            check(await ReplayNarrationProbe.Run(insights, replayLog), "Captured Analyst batch through final validator");
         if (Environment.GetEnvironmentVariable("NARRATION_LIVE_CHECK") == "1") {
-            var liveOptions = new NarrationOptions { Endpoint = Environment.GetEnvironmentVariable("Narration__Endpoint") ?? "", Deployment = Environment.GetEnvironmentVariable("Narration__Deployment") ?? "" };
-            var live = new FoundryNarrator(new HttpClient(), new Azure.Identity.DefaultAzureCredential(), Options.Create(liveOptions));
-            var allLiveValid = true;
-            foreach (var audience in new[] { "casual", "analyst" }) {
-                var evidence = EvidenceBuilder.Build(insights.First(i => i.IsKeyMoment));
-                var raw = await live.Generate(evidence, audience, default);
-                Console.WriteLine("LIVE " + audience + " " + raw);
-                var valid = NarrativeValidator.Parse(raw, evidence, audience, (rule, field) => Console.WriteLine("REJECT " + audience + " " + rule + " " + field)) is not null;
-                Console.WriteLine("LIVE VALID " + audience + " " + valid);
-                allLiveValid &= valid;
+            check(await LiveNarrationProbe.Run(insights), "Live uncached Foundry validation across all five ranked moments");
+        }
+        var probePlan = LiveNarrationProbe.Plan(insights, 3);
+        check(probePlan.Length == 15 && probePlan.GroupBy(i => i.Id).Count() == 5 &&
+            probePlan.GroupBy(i => i.Id).All(g => g.Count() == 3) &&
+            probePlan.Take(5).SequenceEqual(insights.Where(i => i.IsKeyMoment).Take(5)),
+            "Narration: uncached probe covers the five UI-ranked moments once per round");
+        foreach (var fixtureFile in new[] { "AnalystProbeRegression.json", "AnalystV4Regression.json" }) {
+            using var samples = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, fixtureFile)));
+            foreach (var sample in samples.RootElement.EnumerateArray()) {
+                var evidence = EvidenceBuilder.Build(insights.Single(i => i.Id == sample.GetProperty("insightId").GetString()));
+                var rule = "validated";
+                var field = "response";
+                NarrativeValidator.Parse(sample.GetProperty("narrative").GetRawText(), evidence, "analyst", (r, f) => { rule = r; field = f; });
+                check(rule == sample.GetProperty("v4ExpectedRule").GetString() && field == sample.GetProperty("v4ExpectedField").GetString() &&
+                    EvidenceBuilder.Fingerprint(evidence) == sample.GetProperty("fingerprint").GetString(),
+                    "Narration: captured Analyst v4 replay " + sample.GetProperty("run").GetString() + "/" + sample.GetProperty("round").GetInt32() + "/" + sample.GetProperty("rank").GetInt32() + " " + rule + "/" + field);
             }
-            check(allLiveValid, "Live Foundry validation for both audiences");
         }
         using (var captured = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "LiveNarrationRegression.json")))) {
             var liveEvidence = EvidenceBuilder.Build(insights.First(i => i.IsKeyMoment));
@@ -43,6 +68,18 @@ public static class NarrationChecks
                 ["The sequence does not establish causation."], evidence.Facts.Select(f => f.FactId).ToArray()), EvidenceBuilder.Json);
         }
         check(NarrativeValidator.Parse(Valid(e, "casual"), e) is not null && NarrativeValidator.Parse(Valid(e, "analyst"), e, "analyst") is not null, "Narration: both audience structures validate");
+        var numericDiagnosticBase = JsonSerializer.Deserialize<Narrative>(Valid(e, "analyst"), EvidenceBuilder.Json)!;
+        foreach (var (field, narrative) in new[] {
+            ("title", numericDiagnosticBase with { Title = "Unmeasured 98765 metres" }),
+            ("explanation", numericDiagnosticBase with { Explanation = "Recorded 98765 metres.  " + numericDiagnosticBase.Explanation }),
+            ("limitations[0]", numericDiagnosticBase with { Limitations = ["Unmeasured 98765 metres."] })
+        }) {
+            var rule = "";
+            var rejectedField = "";
+            NarrativeValidator.Parse(JsonSerializer.Serialize(narrative, EvidenceBuilder.Json), e, "analyst", (r, f) => { rule = r; rejectedField = f; });
+            check(rule == "numeric_grounding" && rejectedField == field,
+                "Narration: numeric rejection locates the number in " + field + " across unpunctuated titles and repeated whitespace");
+        }
         foreach (var item in insights) {
             var evidence = EvidenceBuilder.Build(item);
             foreach (var audience in new[] { "casual", "analyst" })
@@ -72,8 +109,8 @@ public static class NarrationChecks
         Reject(approved.Replace("metres", "metres away from the attacker"), "reject reused accurate number with wrong semantics");
         Reject(approved.Replace("metres", "metres (98765)"), "reject inaccurate analyst measurement");
         Reject(approved + " Evidence: other-match:999.", "reject foreign event reference");
-        check(FoundryNarrator.NarratorPromptVersion == "v3.1" && ExplanationService.CacheKey(e, "casual", new()) !=
-            ExplanationService.CacheKey(e, "casual", new(), "v2"), "Narration: v1 entries unreachable with current cache key");
+        check(FoundryNarrator.NarratorPromptVersion == "v4.3" && ExplanationService.CacheKey(e, "analyst", new()) !=
+            ExplanationService.CacheKey(e, "analyst", new(), "v3.2"), "Narration: v3.2 entries unreachable with current cache key");
         var invalidId = FallbackNarrator.Build(e, "casual") with { EvidenceEventIds = ["nonexistent"] };
         check(NarrativeValidator.Parse(JsonSerializer.Serialize(invalidId, EvidenceBuilder.Json), e) is null, "Narration: reject nonexistent evidence IDs");
         foreach (var malformed in new[] { "not json", "{}", "null", "{\"title\":32}", "{\"extra\":true}", "[]" })
@@ -85,6 +122,16 @@ public static class NarrationChecks
         var unsupported = FallbackNarrator.Build(e, "analyst") with { Explanation = $"Defender {e.Defender} was 98765 metres away from the lane and stopped the pass." };
         check(NarrativeValidator.Parse(JsonSerializer.Serialize(unsupported, EvidenceBuilder.Json), e) is null, "Narration: reject unsupported numeric claim");
         var validOriginal = JsonSerializer.Deserialize<Narrative>(Valid(e, "analyst"), EvidenceBuilder.Json)!;
+        var spelled = validOriginal with { Explanation = validOriginal.Explanation.Replace("2 metres", "two metres") };
+        string? spelledRule = null, spelledField = null;
+        check(NarrativeValidator.Parse(JsonSerializer.Serialize(spelled, EvidenceBuilder.Json), e, "analyst", (rule, field) => { spelledRule = rule; spelledField = field; }) is null &&
+            spelledRule == "spelled_measurement" && spelledField == "explanation", "Narration: production spelled-out Analyst measurement is rejected with exact field");
+        var spelledNarrator = new TestNarrator((_, _, _) => Task.FromResult(JsonSerializer.Serialize(spelled, EvidenceBuilder.Json)));
+        using (var spelledService = new ExplanationService(spelledNarrator, Options.Create(new NarrationOptions { Provider = "Foundry" }))) {
+            check((await spelledService.Explain(insight, "analyst")).Source == "fallback" &&
+                (await spelledService.Explain(insight, "analyst")).Source == "fallback" && spelledNarrator.Calls == 2,
+                "Narration: production measurement rejection falls back and is never cached");
+        }
         check(validOriginal.Explanation != FallbackNarrator.Build(e, "analyst").Explanation, "Narration: original non-catalogue prose accepted");
         foreach (var disclaimer in new[] { "The sequence cannot establish what caused the attacking decision.", "The defender did not necessarily force a pass." }) {
             var qualified = validOriginal with { Limitations = [disclaimer] };
@@ -166,16 +213,36 @@ public static class NarrationChecks
         using var body = JsonDocument.Parse(transport.Request!);
         check(body.RootElement.GetProperty("response_format").GetProperty("json_schema").GetProperty("strict").GetBoolean() && body.RootElement.GetProperty("model").GetString() == "gpt-41-mini", "Narration: deployment and strict output schema sent");
         using var supplied = JsonDocument.Parse(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
-        check(supplied.RootElement.GetProperty("measurementDefinitions").GetString() == FoundryNarrator.MeasurementDefinitions,
-            "Narration: complete measurement semantics sent to Foundry");
+        var requirements = supplied.RootElement.GetProperty("outputRequirements").GetString()!;
+        check(requirements.Contains("Do not repeat measurements, scores or event IDs") && !requirements.Contains("Copy this measurement exactly"),
+            "Narration: Analyst commentary is separate from authoritative facts");
+        check(supplied.RootElement.GetProperty("measurementDefinitions").GetString()!.Contains("Exact quantities are intentionally omitted") &&
+            !supplied.RootElement.GetProperty("semanticFacts")[0].TryGetProperty("measurements", out _),
+            "Narration: Analyst qualitative evidence keeps authoritative numeric presentation in C#");
         check(!supplied.RootElement.TryGetProperty("approvedNarratives", out _) && supplied.RootElement.GetProperty("semanticFacts").GetArrayLength() > 0,
             "Narration: semantic facts without a narrative catalogue sent to Foundry");
         check(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!.Contains("analyst"), "Narration: audience sent to Foundry adapter");
+        check(!body.RootElement.GetProperty("response_format").GetProperty("json_schema").GetProperty("schema").GetProperty("properties").TryGetProperty("evidenceEventIds", out _),
+            "Analyst: model schema delegates event references to C#");
+        await foundry.Generate(e, "casual", default);
+        using var casualBody = JsonDocument.Parse(transport.Request!);
+        check(casualBody.RootElement.GetProperty("messages")[0].GetProperty("content").GetString() == FoundryNarrator.Instructions &&
+            casualBody.RootElement.GetProperty("response_format").GetProperty("json_schema").GetProperty("schema").GetProperty("properties").TryGetProperty("evidenceEventIds", out _),
+            "Narration: Casual system instructions and output shape unchanged");
+        await AnalystNarrationChecks.Run(check, insights);
     }
     private sealed class TestNarrator(Func<Evidence, string, CancellationToken, Task<string>> run) : IInsightNarrator
     {
         public int Calls;
         public Task<string> Generate(Evidence e, string a, CancellationToken ct) { Interlocked.Increment(ref Calls); return run(e, a, ct); }
+    }
+    private sealed class DiagnosticLog : ILogger<NarrationDiagnostics>
+    {
+        public List<Dictionary<string, object?>> Entries { get; } = [];
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel level) => true;
+        public void Log<TState>(LogLevel level, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            Entries.Add(((IEnumerable<KeyValuePair<string, object?>>)(object)state!).ToDictionary(p => p.Key, p => p.Value));
     }
     private sealed class TestCredential : TokenCredential
     {

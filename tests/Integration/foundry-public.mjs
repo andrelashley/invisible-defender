@@ -4,15 +4,32 @@ const base = process.env.API_URL;
 assert.ok(base?.startsWith('https://'), 'Set API_URL to the public HTTPS URL. This deliberately invokes Foundry.');
 const client = visitor(base);
 const catalogue = await (await client.fetch('/api/match/replay')).json();
-const insight = catalogue.insights.find(i => i.isKeyMoment);
+const insight = catalogue.insights.filter(i => i.isKeyMoment)[Number(process.env.INSIGHT_INDEX ?? 0)];
+assert.ok(insight, 'Select an existing key moment with INSIGHT_INDEX.');
 const payload = { matchId: insight.matchId, insightId: insight.id, scope: 'replay' };
 const send = body => client.fetch('/api/explanations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-for (const audience of ['casual', 'analyst']) {
+const audiences = (process.env.AUDIENCES ?? 'casual,analyst').split(',');
+assert.ok(audiences.every(a => ['casual', 'analyst'].includes(a)));
+for (const audience of audiences) {
   const response = await send({ ...payload, audience }); assert.equal(response.status, 200);
   const first = await response.json();
   assert.ok(['generated','cached'].includes(first.source), `${audience}: fallback does not verify Foundry`);
+  if (process.env.REQUIRE_GENERATED === '1') assert.equal(first.source, 'generated', 'first request must establish fresh inference');
+  if (audience === 'analyst') {
+    assert.deepEqual(first.verifiedFacts.actual, insight.actualMeasurements);
+    assert.deepEqual(first.verifiedFacts.previous, insight.previousMeasurements);
+    assert.equal(first.verifiedFacts.significanceScore, insight.significanceScore);
+    assert.deepEqual(first.verifiedFacts.supportingEventIds, insight.supportingEventIds);
+    assert.ok(first.narrative.evidenceFactIds.every(id => first.verifiedFacts.facts.some(f => f.factId === id)));
+  }
+  assert.ok(first.narrative.evidenceEventIds.every(id => insight.supportingEventIds.includes(id)), 'all event citations belong to the insight');
+  assert.equal(new Set(first.narrative.evidenceEventIds).size, first.narrative.evidenceEventIds.length);
+  if (first.narrative.evidenceFactIds.includes('moment'))
+    assert.ok(insight.supportingEventIds.every(id => first.narrative.evidenceEventIds.includes(id)), 'moment citation includes every supporting event');
+  assert.ok(!JSON.stringify(first).includes('correlationId'), 'server diagnostics stay out of public responses');
   const repeat = await (await send({ ...payload, audience })).json();
   assert.equal(repeat.source, 'cached'); assert.deepEqual(first.narrative, repeat.narrative);
+  assert.deepEqual(first.verifiedFacts, repeat.verifiedFacts, 'server facts survive cache reuse');
   const independent = visitor(base);
   const sharedResponse = await independent.fetch('/api/explanations', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -26,4 +43,4 @@ for (const audience of ['casual', 'analyst']) {
 }
 assert.equal((await send({ ...payload, audience: 'casual', insightId: 'invalid' })).status, 404);
 assert.equal((await send({ ...payload, audience: 'casual', prompt: 'arbitrary' })).status, 400);
-console.log('Public managed-identity Foundry, both audiences, cache and invalid input checks passed.');
+console.log(`Public managed-identity Foundry (${audiences.join(', ')}), verified facts, cache and invalid input checks passed.`);

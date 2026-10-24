@@ -72,7 +72,8 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     const insight = { id: 'insight-1', insightType: 'PassingLaneDenial', significanceScore: 45, isKeyMoment: true,
       title: 'Defender B2 closes a passing lane', explanation: 'Measured transition', primaryDefenderId: 'B2',
       affectedReceiverId: 'A2', observation: moment.event, triggerEvent: moment.event, supportingObservations: [moment.event], supportingEventIds: [moment.event.id],
-      actualMeasurements: { eventId: moment.event.id, ballPosition: { x: 20, y: 34 }, receiverPosition: { x: 40, y: 34 }, blockerIds: ['B2'] },
+      actualMeasurements: { eventId: moment.event.id, defenderDistanceMetres: 1.25, corridorMetres: 2, ballPosition: { x: 20, y: 34 }, receiverPosition: { x: 40, y: 34 }, blockerIds: ['B2'] },
+      previousMeasurements: { eventId: 'previous-event', defenderDistanceMetres: 3, corridorMetres: 2, blockerIds: [] },
       significanceFactors: [{ reason: 'Available-to-covered transition', points: 30 }] };
     const futureMoment = frame(0, 30, 70); futureMoment.event.eventType = 'Interception';
     replayCatalogue = { events: [moment, futureMoment], insights: [{ ...insight, id: 'future', title: 'Future replay recovery', observation: futureMoment.event, triggerEvent: futureMoment.event }] };
@@ -90,6 +91,11 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     assert.equal(inferenceCalls(), 0, 'load, SignalR and ranked selection never generate');
     const audience = () => find(n => n.type === 'select');
     audience().props.onChange({ target: { value: 'analyst' } }); render();
+    const verifiedText = () => all(find(n => n.props['aria-label'] === 'Verified Analyst facts')).flatMap(n => n.children.filter(c => typeof c === 'string' || typeof c === 'number')).join(' ');
+    assert.ok(verifiedText().includes('1.25 metres from defender B2 to the candidate passing segment'));
+    assert.ok(verifiedText().includes('3.00 metres from defender B2 to the candidate passing segment'));
+    assert.ok(verifiedText().includes('coverage threshold  2  metres'));
+    assert.ok(verifiedText().includes('45') && verifiedText().includes('previous-event'), 'server measurements, scores and references render before inference');
     audience().props.onChange({ target: { value: 'casual' } }); render();
     assert.equal(inferenceCalls(), 0, 'switching audiences never generates');
     button('Generate AI Explanation').props.onClick(); render();

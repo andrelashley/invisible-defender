@@ -12,6 +12,12 @@ for (const audience of ['casual', 'analyst']) {
   assert.equal(result.source, 'fallback', 'Run this test only against Provider=Disabled');
   assert.equal(result.audience, audience);
   assert.deepEqual(result.narrative.evidenceEventIds, insight.supportingEventIds);
+  if (audience === 'analyst') {
+    assert.deepEqual(result.verifiedFacts.actual, insight.actualMeasurements);
+    assert.deepEqual(result.verifiedFacts.previous, insight.previousMeasurements);
+    assert.equal(result.verifiedFacts.significanceScore, insight.significanceScore);
+    assert.deepEqual(result.verifiedFacts.supportingEventIds, insight.supportingEventIds);
+  }
 }
 assert.equal((await send({ ...payload, audience: 'arbitrary prompt' })).status, 400);
 assert.equal((await send({ ...payload, insightId: 'unknown' })).status, 404);

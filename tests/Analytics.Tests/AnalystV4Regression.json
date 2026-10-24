@@ -1,0 +1,424 @@
+[
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 1,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "v4ExpectedRule": "unsupported_physical_or_predictive_claim",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defensive Passing Lane Denial by B5 on A2's Passing Option",
+      "explanation": "Defender B5 moved into a critical position to cover the passing segment to candidate receiver A3, effectively closing the passing lane during A2's ball carries. This strategic coverage is a positional denial preventing immediate access to A3, as B5 shifted from outside to within the coverage threshold coinciding with A2's progression. The presence of B5 geometrically blocks the passing line to A3 during this sequence.",
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:077",
+        "event:synthetic-001:078",
+        "event:synthetic-001:079",
+        "event:synthetic-001:080",
+        "event:synthetic-001:081",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not provide information about A2's subsequent attacking choice following this passing lane denial."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 1,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "v4ExpectedRule": "unsupported_causation",
+    "v4ExpectedField": "title",
+    "narrative": {
+      "title": "Positional Coverage Leading to Interception by Defender B5",
+      "explanation": "Defender B5 maintained alignment on the passing lane between the carrier A2 and receiver A3 in both previous and actual moments, effectively providing geometric coverage that correlated with the interception event. This positional commitment created a physical barrier within the passing corridor, increasing opportunities to regain possession. The defense's spatial control exemplifies structured coverage rather than reactive adjustments.",
+      "evidenceFactIds": [
+        "event:synthetic-001:083",
+        "event:synthetic-001:084",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "The sequence does not specify if the interception altered the attacking team's subsequent decisions."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 1,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "v4ExpectedRule": "pressure_actor_unrecorded",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defensive coverage and pressure on ball carrier and passing lane",
+      "explanation": "Defender B1 applies pressure directly on carrier A1 and simultaneously maintains close geometric coverage of candidate receiver A2 along the potential passing lane. This dual positioning constrains the ball carrier's options and limits the clear passing path, contributing to a controlled defensive setup. The defender's alignment restricts the attacking side's forward distribution possibilities.",
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not provide information on how the attacking team adjusted their decision-making in response to the defensive coverage."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 1,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Defensive Alignment Limits Receiving Options",
+      "explanation": "Defender B3 is positioned to cover the passing lane to candidate receiver A3, creating a geometric block on this route. Under pressure on carrier A2, this coverage influences the passing options, with the completed pass directed to player A1 instead. This defensive setup curtails straightforward passes to A3 by spatially restricting the passing lane.",
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:035",
+        "event:synthetic-001:036",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "Actions do not reveal if A2 considered passing to A3 before selecting A1."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 1,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Defender B4's Role in Passing Lane Coverage",
+      "explanation": "Defender B4 maintains alignment on the passing lane between ball carrier A3 and candidate receiver A2, effectively acting as a geometric blocker. This positioning likely limits the passing options toward A2 while pressure on A3 occurs. Such coverage offers a spatial constraint on the ball carrier's vision and passing angles.",
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:059",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "The sequence does not reveal whether the defensive alignment influenced the attacking player's choice beyond recorded events."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 2,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Effective Passing Lane Denial by Defender B5",
+      "explanation": "Defender B5 moved into a position within the coverage threshold of the passing lane to candidate receiver A3, effectively creating geometric coverage that coincided with an available passing option becoming blocked. This defensive movement occurred while player A2 was carrying the ball and under pressure. The positional adjustment changed from previously leaving the passing lane uncovered to providing coverage, limiting A2's passing options.",
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:078",
+        "event:synthetic-001:080",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not indicate whether player A2 chose to alter their passing decision due to the coverage."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 2,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "v4ExpectedRule": "unsupported_causation",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Interception Aligned with Passing Lane Coverage",
+      "explanation": "Defender B5 maintained tight positional alignment along the passing lane between carrier A2 and receiver A3, geometrically obstructing this passing route. This alignment facilitated the interception of the attempted pass, indicating a vigilant defensive stance focused on this key passing segment. The coverage pertains specifically to the positional relationship during the interception event.",
+      "evidenceFactIds": [
+        "event:synthetic-001:083",
+        "event:synthetic-001:084",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "The sequence does not reveal whether the attacker's choice to pass to player A3 was altered prior to the pass attempt."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 2,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Defensive Coverage Through Positional Blocking",
+      "explanation": "Defender B1 maintained coverage within the passing lane between carrier A1 and candidate receiver A2, acting as a geometric blocker. This positioning coincided with pressure applied to A1 and a completed sideways or backward pass to A4, demonstrating effective spatial control without direct interference on the ball carrier. The defender's coverage potentially shapes passing options by limiting direct lanes.",
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not reveal the attacking team's decision-making process behind the chosen pass target."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 2,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "v4ExpectedRule": "pressure_actor_unrecorded",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defensive Alignment Blocking Candidate Passing Lane",
+      "explanation": "Defender B3 maintained alignment on the passing segment to candidate receiver A3 during the sequence. This positional coverage created a geometric block on A3, following pressure by defender B3 on carrier A2 and subsequent pass attempts. Such alignment limits the spatial options available to the attacker along this passing lane.",
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:035",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not indicate whether the attacking player considered alternative passing targets beyond A3."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 2,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "v4ExpectedRule": "unsupported_causation",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defender B4's alignment and coverage on candidate receiver A2",
+      "explanation": "Defender B4 maintained tight alignment along the passing lane between carrier A3 and candidate receiver A2, establishing a geometric block that limits passing options and potential passing lanes. This positioning, observed consistently in previous and actual snapshots, contributes to a containment zone around A2 during the possession. The defensive pressure on A3 precedes the pass completion to A5, highlighting B4's role in coverage rather than direct pressure on the carrier.",
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not provide insight into how B4's coverage influenced A3's decision to pass to A5 instead of candidate receiver A2."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 3,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Passing Lane Denial by Defender B5",
+      "explanation": "Defender B5 shifted from outside to within the coverage threshold of the passing lane targeting player A3 during ball carrier A2's advancement. This movement geometrically covered the passing option to A3, restricting potential passing opportunities. The defensive mechanism focuses on obstructing a specific passing route to reduce available options.",
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:077",
+        "event:synthetic-001:078",
+        "event:synthetic-001:079",
+        "event:synthetic-001:080",
+        "event:synthetic-001:081",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not provide information about player A2's intended passing choice or alternative options beyond A3."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 3,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Positional Coverage Leading to Defensive Recovery",
+      "explanation": "Defender B5 was consistently aligned on the passing lane from A2 to A3, establishing geometric coverage over the candidate receiver A3. This positional coverage coincided with an interception by B5, resulting in possession recovery during the sequence. The defense effectively maintained spatial control over the passing option throughout the play.",
+      "evidenceFactIds": [
+        "event:synthetic-001:081",
+        "event:synthetic-001:083",
+        "event:synthetic-001:084",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "The sequence does not indicate whether the coverage directly influenced the attacking player's decision to attempt the pass to A3."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 3,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response",
+    "narrative": {
+      "title": "Effective Defensive Lane Coverage by B1",
+      "explanation": "Defender B1 maintains close geometric coverage on candidate receiver A2, aligning within the critical passing lane between carrier A1 and A2. This positioning may constrain passing options after pressure applied on A1 preceding a completed pass to A4. B1's presence in the candidate passing segment suggests disruptive potential on forward ball progression.",
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not establish any effect of B1's coverage on the selection of the actual pass recipient A4."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 3,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "v4ExpectedRule": "unsupported_event",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defender B3's Positional Coverage on Candidate Receiver A3",
+      "explanation": "Defender B3 maintained alignment directly on the passing lane between carrier A2 and candidate receiver A3, effectively providing geometric coverage over A3. This positional coverage occurred consistently before and during the recorded pass attempt by A2 to A1. The presence of defender B3 on the passing segment limits passing options and applies pressure through spatial occupation rather than direct interception or contact.",
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:035",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "This sequence does not reveal how the defender's positioning affected the final attacking choice beyond the observed pass to A1."
+      ]
+    }
+  },
+  {
+    "run": "live-probe-v42.log",
+    "generationPromptVersion": "v4.2",
+    "validationVersion": "v4.3",
+    "round": 3,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "v4ExpectedRule": "pressure_actor_unrecorded",
+    "v4ExpectedField": "explanation",
+    "narrative": {
+      "title": "Defensive Alignment and Coverage on Passing Lane",
+      "explanation": "Defender B4 is positioned aligned with the candidate passing lane toward A2, effectively obstructing the geometric passing angle. This coverage occurs after defender B4 applied pressure on carrier A3, who then executed a pass to A5. The defender’s placement on the passing segment demonstrates spatial restriction of potential distribution options within the sequence observed.",
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "limitations": [
+        "The sequence does not detail whether defender B4's coverage influenced the choice to pass to A5 instead of candidate receiver A2."
+      ]
+    }
+  }
+]

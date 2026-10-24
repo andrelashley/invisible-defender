@@ -21,7 +21,8 @@ function App() {
   const [replayInsights, setReplayInsights] = useState<DefensiveInsight[]>([]);
   const [inspected, setInspected] = useState<MatchState>();
   const [audience, setAudience] = useState('casual');
-  type Narration = { narrative: { title: string; explanation: string; evidenceEventIds: string[]; limitations: string[] }; source: string };
+  type Narration = { narrative: { title: string; explanation: string; evidenceEventIds: string[]; evidenceFactIds: string[]; limitations: string[] }; source: string;
+    verifiedFacts?: { facts: { factId: string; factType: string; statement: string }[]; significanceScore: number; supportingEventIds: string[] } };
   const [narration, setNarration] = useState<{ key: string; value?: Narration; loading?: boolean; error?: string }>();
   const narrationKey = JSON.stringify([chosenInsight, audience, replay]);
   const narrationSelection = useRef(narrationKey);
@@ -159,6 +160,15 @@ function App() {
       <h2>Explain this defensive moment</h2>
       <p>{chosenInsight.title}: {chosenInsight.explanation}</p>
       <p>Supporting events: {chosenInsight.supportingEventIds.join(', ')}</p>
+      {audience === 'analyst' && <div aria-label="Verified Analyst facts">
+        <h3>Verified evidence</h3>
+        <p>Observed: {readable(chosenInsight.triggerEvent.eventType)} at {chosenInsight.triggerEvent.timestamp.toFixed(1)} seconds. These synthetic events are separate from positional interpretation.</p>
+        {[{ label: 'Actual', measurement: chosenInsight.actualMeasurements }, { label: 'Previous', measurement: chosenInsight.previousMeasurements }].map(({ label, measurement }) => {
+          return measurement && <p key={label}>{label} derived measurement ({measurement.eventId}): {typeof measurement.defenderDistanceMetres === 'number' ? `${measurement.defenderDistanceMetres.toFixed(2)} metres from defender ${chosenInsight.primaryDefenderId} to the candidate passing segment` : 'Distance unavailable'}; coverage threshold {measurement.corridorMetres} metres. Candidate receiver: {chosenInsight.affectedReceiverId}; blockers: {measurement.blockerIds.join(', ') || 'none'}.</p>;
+        })}
+        <p>Heuristic significance: {chosenInsight.significanceScore} selection points.</p>
+        <ul>{chosenInsight.significanceFactors.map(f => <li key={f.reason}>{f.reason}: {f.points} points</li>)}</ul>
+      </div>}
       <label>Audience <select value={audience} onChange={e => setAudience(e.target.value)}>
         <option value="casual">Casual Fan</option><option value="analyst">Analyst</option>
       </select></label>{' '}
@@ -171,6 +181,9 @@ function App() {
           <h3>{currentNarration.value.narrative.title}</h3><p>{currentNarration.value.narrative.explanation}</p>
           <p>Evidence: {currentNarration.value.narrative.evidenceEventIds.join(', ')}</p>
           <ul>{currentNarration.value.narrative.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul>
+          {audience === 'analyst' && currentNarration.value.verifiedFacts && <details><summary>Supporting facts</summary>
+            <ul>{currentNarration.value.verifiedFacts.facts.map(fact => <li key={fact.factId}>{fact.factId} ({fact.factType}): {fact.statement}</li>)}</ul>
+          </details>}
         </>}
       </div>
     </section>}

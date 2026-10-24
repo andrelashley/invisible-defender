@@ -2,5 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\..\src\api\InvisibleDefender.Api.csproj" /></ItemGroup>
   <ItemGroup><None Update="LiveNarrationRegression.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Update="AnalystProbeRegression.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Update="AnalystV4Regression.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>
 

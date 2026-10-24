@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -20,11 +21,19 @@ public sealed class NarrationOptions
     public int TimeoutSeconds { get; set; } = 15;
     public int CacheExpirationSeconds { get; set; } = 3600;
     public int CacheSize { get; set; } = 256;
+    public bool DiagnosticsEnabled { get; set; }
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public record ExplanationRequest(string MatchId, string InsightId, string Audience, string Scope = "live");
 public record Narrative(string Title, string Explanation, string[] EvidenceEventIds, string[] Limitations, string[]? EvidenceFactIds = null);
-public record ExplanationResult(Narrative Narrative, string Source, string Audience, string EvidenceFingerprint);
+public record ExplanationResult(Narrative Narrative, string Source, string Audience, string EvidenceFingerprint,
+    AnalystFacts? VerifiedFacts = null);
+// Always constructed from domain evidence, never deserialized from model output.
+public record AnalystFacts(SemanticFact[] Facts, InsightMeasurement Actual, InsightMeasurement? Previous,
+    int SignificanceScore, SignificanceFactor[] SignificanceFactors, string[] SupportingEventIds)
+{
+    public static AnalystFacts Build(Evidence e) => new(e.Facts, e.Actual, e.Previous, e.RankingScore, e.RankingFactors, e.SupportingEventIds);
+}
 public record LaneCoverage(int? PreviousBlockerCount, int ActualBlockerCount);
 public record Evidence(string MatchId, string InsightId, string Category, double Timestamp, string? Defender,
     string? BallCarrier, string? Receiver, InsightMeasurement Actual, InsightMeasurement? Previous,
@@ -84,6 +93,23 @@ public static class SemanticEvidence
         }
     }
 }
+public static class AnalystSemanticEvidence
+{
+    // Give the writer qualitative relationships, not numbers to transcribe. Full facts remain authoritative in C#.
+    public static object[] Build(Evidence e) => e.Facts.Select(f => {
+        var measurement = f.FactId.StartsWith("previous:", StringComparison.Ordinal) ? e.Previous : e.Actual;
+        return (object)new {
+            f.FactId, f.FactType,
+            statement = f.FactId.EndsWith(":lane-distance", StringComparison.Ordinal)
+                ? $"Defender {e.Defender}: " + (measurement?.DefenderDistanceMetres == 0 ? "aligned on the candidate passing segment." :
+                    measurement?.BlockerIds.Contains(e.Defender!) == true ? "within the coverage threshold of the candidate passing segment." : "outside the coverage threshold of the candidate passing segment.")
+                : f.FactId.EndsWith(":coverage", StringComparison.Ordinal)
+                    ? $"Candidate receiver {measurement?.ReceiverId}; geometric blockers: {string.Join(", ", measurement?.BlockerIds ?? [])}."
+                    : f.Statement,
+            snapshot = f.FactId.StartsWith("actual:", StringComparison.Ordinal) ? "actual" : f.FactId.StartsWith("previous:", StringComparison.Ordinal) ? "previous" : null
+        };
+    }).ToArray();
+}
 public interface IInsightNarrator { Task<string> Generate(Evidence evidence, string audience, CancellationToken cancellationToken); }
 public sealed class MockNarrator : IInsightNarrator
 {
@@ -129,7 +155,10 @@ public static class NarrativeValidator
             if (audience is not ("casual" or "analyst")) return Reject("audience", "audience");
             using var document = JsonDocument.Parse(raw);
             var root = document.RootElement;
-            string[] fields = ["title", "explanation", "evidenceFactIds", "evidenceEventIds", "limitations"];
+            var modelOwnedReferences = audience == "casual" || root.TryGetProperty("evidenceEventIds", out _);
+            string[] fields = modelOwnedReferences
+                ? ["title", "explanation", "evidenceFactIds", "evidenceEventIds", "limitations"]
+                : ["title", "explanation", "evidenceFactIds", "limitations"];
             if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != fields.Length ||
                 fields.Any(f => !root.TryGetProperty(f, out _))) return Reject("json_shape", "root");
             var n = JsonSerializer.Deserialize<Narrative>(raw, EvidenceBuilder.Json);
@@ -137,13 +166,14 @@ public static class NarrativeValidator
             if (string.IsNullOrWhiteSpace(n.Title) || n.Title.Length > 120) return Reject("field_constraints", "title");
             if (string.IsNullOrWhiteSpace(n.Explanation)) return Reject("field_constraints", "explanation");
             if (n.EvidenceFactIds is not { Length: > 0 }) return Reject("field_constraints", "evidenceFactIds");
-            if (n.EvidenceEventIds is not { Length: > 0 }) return Reject("field_constraints", "evidenceEventIds");
             if (n.Limitations is null || n.Limitations.Length > 2) return Reject("field_constraints", "limitations");
             for (var i = 0; i < n.Limitations.Length; i++)
                 if (string.IsNullOrWhiteSpace(n.Limitations[i]) || n.Limitations[i].Length > 240)
                     return Reject("field_constraints", $"limitations[{i}]");
             var facts = e.Facts.Where(f => n.EvidenceFactIds.Contains(f.FactId)).ToArray();
             if (facts.Length != n.EvidenceFactIds.Length) return Reject("unknown_or_duplicate_fact", "evidenceFactIds");
+            if (!modelOwnedReferences) n = n with { EvidenceEventIds = facts.SelectMany(f => f.SupportingEventIds).Distinct().ToArray() };
+            if (n.EvidenceEventIds is not { Length: > 0 }) return Reject("field_constraints", "evidenceEventIds");
             if (n.EvidenceEventIds.Distinct().Count() != n.EvidenceEventIds.Length ||
                 n.EvidenceEventIds.Any(id => !e.SupportingEventIds.Contains(id)))
                 return Reject("unknown_or_duplicate_event", "evidenceEventIds");
@@ -151,18 +181,31 @@ public static class NarrativeValidator
                 return Reject("missing_fact_supporting_event", "evidenceEventIds");
             var words = Regex.Matches(n.Explanation, @"\S+").Count;
             var sentences = Regex.Split(n.Explanation.Trim(), @"(?<=[.!?])\s+").Length;
-            if (audience == "casual" ? words is < 35 or > 65 || sentences is < 2 or > 3 : words is < 65 or > 115 || sentences is < 3 or > 5) return Reject("audience_length", "explanation");
+            if (audience == "casual" ? words is < 35 or > 65 || sentences is < 2 or > 3 : words is < 20 or > 115 || sentences is < 2 or > 5) return Reject("audience_length", "explanation");
             var text = n.Title + " " + n.Explanation + " " + string.Join(" ", n.Limitations);
             if (audience == "casual" && (e.SupportingEventIds.Any(n.Explanation.Contains) ||
                 Regex.IsMatch(n.Explanation, "perpendicular|geometric|projection", RegexOptions.IgnoreCase))) return Reject("casual_style", "explanation");
             // Conservative lexical checks catch known failure classes, not all semantic errors.
             var proseFields = new[] { (Field: "title", Text: n.Title), (Field: "explanation", Text: n.Explanation) }
                 .Concat(n.Limitations.Select((l, i) => (Field: $"limitations[{i}]", Text: l))).ToArray();
+            if (audience == "analyst") {
+                foreach (var field in proseFields) {
+                    var failure = AnalystClaimValidator.Check(field.Text, e, facts);
+                    if (failure is not null) return Reject(failure, field.Field);
+                }
+            }
             foreach (var field in proseFields) {
                 // Remove only explicit negative causal predicates, never the remainder of a clause.
                 var assertions = Regex.Replace(field.Text,
                     @"\b(?:cannot|can not|does not|do not) establish (?:what caused|that \w+ caused)|\b(?:did not|does not|cannot|can not) (?:necessarily )?(?:force|cause|prevent|influence|intend)\b",
                     "", RegexOptions.IgnoreCase);
+                if (audience == "analyst") {
+                    // Remove only an explicitly unknown/negated predicate. Never consume punctuation or a
+                    // contrasting/conjoined assertion, so a disclaimer cannot shelter a positive claim.
+                    assertions = Regex.Replace(assertions,
+                        @"\b(?:does not|do not|cannot|can not)\s+(?:reveal|indicate|show|establish)\s+(?:whether|if|how)\s+(?:(?!(?:but|however|yet|although|and)\b)[\p{L}\d'’]+\s+){0,12}(?:caused|forced|prevented|influenced|intended)\b|\bdoes not provide information about\s+(?:(?!(?:but|however|yet|although|and)\b)[\p{L}\d'’]+\s+){0,8}intended\b",
+                        "", RegexOptions.IgnoreCase);
+                }
                 if (Regex.IsMatch(assertions, @"\b(forced?|caused?|prevented|influenced|intended|overlap|contact|obstruction width|feet|yards|percent)\b", RegexOptions.IgnoreCase))
                     return Reject("unsupported_language", field.Field);
             }
@@ -170,16 +213,25 @@ public static class NarrativeValidator
             // Every numerical clause must name the relationship and subject, not just reuse a valid number.
             var withoutIds = text;
             foreach (var id in new[] { e.Defender, e.BallCarrier, e.Receiver }.Where(id => !string.IsNullOrEmpty(id)))
-                withoutIds = withoutIds.Replace(id!, "PLAYER", StringComparison.Ordinal);
+                withoutIds = withoutIds.Replace(id!, new string('X', id!.Length), StringComparison.Ordinal);
             var originalClauses = Regex.Split(text, @"(?<=[.!?;])\s+");
             var clauses = Regex.Split(withoutIds, @"(?<=[.!?;])\s+");
+            var searchOffset = 0;
             for (var index = 0; index < clauses.Length; index++) {
                 var clause = clauses[index];
                 var originalClause = originalClauses[index];
-                var clauseOffset = originalClauses.Take(index).Sum(c => c.Length + 1);
-                var failedField = clauseOffset < n.Title.Length ? "title" :
-                    clauseOffset < n.Title.Length + 1 + n.Explanation.Length ? "explanation" : "limitations";
+                var clauseOffset = text.IndexOf(originalClause, searchOffset, StringComparison.Ordinal);
+                searchOffset = clauseOffset + originalClause.Length;
                 foreach (Match m in Regex.Matches(clause, @"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])")) {
+                    // A title without terminal punctuation shares a clause with the explanation.
+                    // Locate the rejected number, not the clause start; preserve offsets when masking IDs.
+                    var numericOffset = clauseOffset + m.Index;
+                    var fieldOffset = 0;
+                    var failedField = "title";
+                    foreach (var field in proseFields) {
+                        if (numericOffset < fieldOffset + field.Text.Length) { failedField = field.Field; break; }
+                        fieldOffset += field.Text.Length + 1;
+                    }
                     if (!double.TryParse(m.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)) return Reject("numeric_parse", failedField);
                     var numeric = facts.SelectMany(f => f.Measurements).Where(v => v.Value == value).ToArray();
                     if (!numeric.Any(v => clause.Contains(v.Relationship, StringComparison.OrdinalIgnoreCase) &&
@@ -188,16 +240,32 @@ public static class NarrativeValidator
                     if (Regex.IsMatch(clause, "away from|to the receiver|to the ball carrier|from the attacker|physical|observed.*distance", RegexOptions.IgnoreCase)) return Reject("numeric_relationship", failedField);
                 }
             }
-            if (Regex.IsMatch(text, @"\b(zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(metres|meters|feet|yards|seconds|percent)", RegexOptions.IgnoreCase)) return Reject("spelled_measurement", "title/explanation/limitations");
-            if (audience == "analyst" && (!Regex.IsMatch(withoutIds, @"\d+(?:\.\d+)?\s+metres") || !Regex.IsMatch(n.Explanation, "observ|record", RegexOptions.IgnoreCase) ||
-                !Regex.IsMatch(n.Explanation, "derived|analysis|geometr", RegexOptions.IgnoreCase) || n.Limitations.Length != 1)) return Reject("analyst_requirements", "explanation/limitations");
+            foreach (var field in proseFields)
+                if (Regex.IsMatch(field.Text, @"\b(zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(metres|meters|feet|yards|seconds|percent)", RegexOptions.IgnoreCase)) return Reject("spelled_measurement", field.Field);
+            if (audience == "analyst") {
+                if (n.Limitations.Length != 1) return Reject("analyst_limitation", "limitations");
+            }
             return n;
         } catch (Exception ex) when (ex is JsonException or InvalidOperationException or ArgumentException) { return Reject("deserialization", "root"); }
     }
 }
 public sealed class FoundryNarrator(HttpClient http, TokenCredential credential, IOptions<NarrationOptions> options, NarrationDiagnostics? diagnostics = null) : IInsightNarrator
 {
-    public const string NarratorPromptVersion = "v3.1";
+    public const string NarratorPromptVersion = "v4.3";
+    public const string AnalystInstructions = """
+        Write original concise football Analyst commentary from the supplied qualitative semantic facts only.
+        Return title, explanation, evidenceFactIds, limitations. Cite exact fact IDs for every fact used.
+        C# displays measurements, event references, scores and evidence classifications separately.
+        Do not supply numbers, measurements, event IDs or scores in prose. Use supplied player IDs only.
+        Explain the defensive mechanism and its interest in 2 to 3 sentences, 30 to 60 words.
+        Describe only the supplied actions and positional relationships. No invented actions or outcomes.
+        Coverage is a positional classification, not proof that a defender changed an attacking choice.
+        Do not claim or suggest contribution, influence, readiness, intentions, causation or goals prevented.
+        Include exactly one short limitation about what the sequence cannot tell us about the attacking choice.
+        A recorded pass target is known; do not call it uncertain or substitute the candidate receiver.
+        Avoid force, cause, prevent, influence, intend, overlap and contact, even in disclaimers.
+        No prescribed observation/derivation wording is needed. Never copy a supplied narrative template.
+        """;
     public const string Instructions = """
         Compose original football commentary from semantic facts only. Do not select or copy a template.
         Return JSON with title, explanation, evidenceFactIds, evidenceEventIds and limitations. Cite every fact used
@@ -255,14 +323,23 @@ public sealed class FoundryNarrator(HttpClient http, TokenCredential credential,
         var token = await credential.GetTokenAsync(new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]), cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Post, o.Endpoint.TrimEnd('/') + "/chat/completions");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        var schema = new { type = "object", additionalProperties = false, required = new[] { "title", "explanation", "evidenceFactIds", "evidenceEventIds", "limitations" },
-            properties = new { evidenceFactIds = new { type = "array", items = new { type = "string" } }, title = new { type = "string" }, explanation = new { type = "string" }, evidenceEventIds = new { type = "array", items = new { type = "string" } }, limitations = new { type = "array", items = new { type = "string" } } } };
+        var properties = new Dictionary<string, object> {
+            ["title"] = new { type = "string" }, ["explanation"] = new { type = "string" },
+            ["evidenceFactIds"] = new { type = "array", items = new { type = "string" } },
+            ["limitations"] = new { type = "array", items = new { type = "string" } }
+        };
+        if (audience == "casual") properties["evidenceEventIds"] = new { type = "array", items = new { type = "string" } };
+        var schema = new { type = "object", additionalProperties = false, required = properties.Keys.ToArray(), properties };
         request.Content = JsonContent.Create(new { model = o.Deployment, max_completion_tokens = Math.Clamp(o.MaxOutputTokens, 128, 2000),
-            messages = new[] { new { role = "system", content = Instructions }, new { role = "user", content = JsonSerializer.Serialize(new { audience, measurementDefinitions = MeasurementDefinitions, semanticFacts = evidence.Facts,
+            messages = new[] { new { role = "system", content = audience == "analyst" ? AnalystInstructions : Instructions }, new { role = "user", content = JsonSerializer.Serialize(new { audience,
+                measurementDefinitions = audience == "analyst" ? "Exact quantities are intentionally omitted from commentary evidence and are displayed separately by C#. Qualitative coverage is derived; event actions are observed. No hypothetical facts are supplied." : MeasurementDefinitions,
+                semanticFacts = audience == "analyst" ? (object)AnalystSemanticEvidence.Build(evidence) : evidence.Facts,
                 outputRequirements = audience == "casual"
                     ? "Write for a Casual Fan. explanation: exactly 2 sentences, 35 to 60 words total. Describe the movement and changing passing option in plain English without numbers, event IDs or geometry jargon. limitations: exactly one brief sentence. Do not use force, forced, cause, caused, prevented, influenced, intended, overlap or contact, even in disclaimers."
-                    : "Write for an Analyst. explanation: exactly 4 sentences, 65 to 110 words total. Describe recorded actions and derived analysis separately. Include one measurement using the exact phrase coverage threshold and its supplied value in metres. Do not say away from, physical, force, forced, cause, caused, prevented, influenced, intended, overlap or contact, even in disclaimers. limitations: exactly one brief sentence.",
-                citationRequirements = "Cite the exact fact IDs used. evidenceEventIds must include EVERY supportingEventId of EVERY cited fact, including all events for moment. Do not abbreviate IDs."
+                    : "Write concise Analyst commentary about the defensive mechanism, 2 to 4 sentences and 30 to 80 words. Do not repeat measurements, scores or event IDs; the backend presents them separately. No mandatory observation/derivation wording. Include exactly one concise limitation.",
+                citationRequirements = audience == "casual"
+                    ? "Cite the exact fact IDs used. evidenceEventIds must include EVERY supportingEventId of EVERY cited fact, including all events for moment. Do not abbreviate IDs."
+                    : "Cite exact evidenceFactIds for all facts used. Event references are resolved by the backend."
             }, EvidenceBuilder.Json) } },
             response_format = new { type = "json_schema", json_schema = new { name = "defensive_explanation", strict = true, schema } } });
         diagnostics?.Write("foundry_call", audience, "http", false);
@@ -272,7 +349,11 @@ public sealed class FoundryNarrator(HttpClient http, TokenCredential credential,
         try {
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
         var choice = body.RootElement.GetProperty("choices")[0];
-        if (choice.GetProperty("finish_reason").GetString() != "stop") throw new InvalidOperationException("Incomplete generation.");
+        var finishReason = choice.GetProperty("finish_reason").GetString();
+        if (finishReason != "stop") {
+            diagnostics?.Write(finishReason == "length" ? "output_truncated" : "generation_incomplete", audience, "choices[0].finish_reason", true);
+            throw new InvalidOperationException("Incomplete generation.");
+        }
         var content = choice.GetProperty("message").GetProperty("content").GetString();
         if (string.IsNullOrWhiteSpace(content)) throw new InvalidOperationException("Missing content.");
         diagnostics?.Write("foundry_response_parsed", audience, "choices[0].message.content", false);
@@ -304,7 +385,8 @@ public sealed class ExplanationService(IInsightNarrator narrator, IOptions<Narra
     {
         if (cache.TryGetValue<ExplanationResult>(key, out var hit)) return hit! with { Source = "cached" };
         var fingerprint = EvidenceBuilder.Fingerprint(e);
-        diagnostics?.Write("generation_started", audience, narrator is FoundryNarrator ? "Foundry" : "local_provider", false);
+        using var correlation = new Activity("Narration").SetIdFormat(ActivityIdFormat.W3C).Start();
+        diagnostics?.Write("generation_started", audience, "response", false);
         try {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(Math.Clamp(options.Value.TimeoutSeconds, 1, 60)));
             var raw = await narrator.Generate(e, audience, timeout.Token).WaitAsync(timeout.Token);
@@ -313,13 +395,13 @@ public sealed class ExplanationService(IInsightNarrator narrator, IOptions<Narra
             if (validated is not null) {
                 diagnostics?.Write("validation_passed", audience, "response", false);
                 var source = options.Value.Provider == "Mock" ? "mock" : "generated";
-                var result = new ExplanationResult(validated, source, audience, fingerprint);
+                var result = new ExplanationResult(validated, source, audience, fingerprint, audience == "analyst" ? AnalystFacts.Build(e) : null);
                 if (source == "generated") cache.Set(key, result, new MemoryCacheEntryOptions { Size = 1, AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(Math.Clamp(options.Value.CacheExpirationSeconds, 1, 86400)) });
                 return result;
             }
-        } catch (Exception ex) when (ex is not OutOfMemoryException) { diagnostics?.Write(ex is OperationCanceledException ? "timeout" : "generation_exception", audience, ex.GetType().Name, true); /* No exception messages or payloads. */ }
+        } catch (Exception ex) when (ex is not OutOfMemoryException) { diagnostics?.Write(ex is OperationCanceledException ? "timeout" : "generation_exception", audience, "response", true); /* No exception messages or payloads. */ }
         diagnostics?.Write("fallback_used", audience, "response", true);
-        return new(FallbackNarrator.Build(e, audience), "fallback", audience, fingerprint);
+        return new(FallbackNarrator.Build(e, audience), "fallback", audience, fingerprint, audience == "analyst" ? AnalystFacts.Build(e) : null);
     }
     public void Dispose() => cache.Dispose();
 }
@@ -329,12 +411,14 @@ public sealed class DisabledNarrator : IInsightNarrator
 }
 
 // Only fixed stage/rule names, field names and HTTP status codes are logged.
-public sealed class NarrationDiagnostics(IHostEnvironment environment, ILogger<NarrationDiagnostics> logger)
+public sealed class NarrationDiagnostics(IOptions<NarrationOptions> options, ILogger<NarrationDiagnostics> logger)
 {
     public void Write(string rule, string audience, string field, bool fallback, int? status = null)
     {
-        if (environment.IsDevelopment())
-            logger.LogInformation("Narration rule={Rule} audience={Audience} field={Field} fallback={Fallback} httpStatus={Status}",
-                rule, audience, field, fallback, status);
+        if (options.Value.DiagnosticsEnabled)
+            logger.LogInformation("Narration inferenceStatus={Status} failureCategory={FailureCategory} rule={Rule} field={Field} audience={Audience} correlationId={CorrelationId}",
+                status?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? (fallback ? "rejected" : "progress"),
+                fallback ? (rule is "timeout" or "output_truncated" or "generation_incomplete" or "generation_exception" or "foundry_response_parse" or "foundry_http_failure" or "fallback_used" ? rule : "validation") : "none",
+                rule, field, audience, Activity.Current?.TraceId.ToString() ?? "none");
     }
 }

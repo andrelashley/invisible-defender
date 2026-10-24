@@ -1,8 +1,102 @@
 # Production deployment and judging runbook
 
-Status (2026-10-24): deployed to the approved personal subscription and resource group. Local production container and public HTTPS/WSS checks pass. Live Casual Fan generation and shared caching pass; public Analyst generation repeatedly returns fallback, so the full two-audience Foundry release gate remains failing. Native browser visual/pointer-capture QA remains unavailable. See actual deployment results below.
+## Current release: Analyst facts/commentary separation (2026-10-24)
 
-## Actual deployment results (2026-10-24)
+Final revision: **`invisible-defender--analyst-v43`**. Latest and ready both match;
+the revision is Healthy/Provisioned with one replica and 100% latest-revision
+traffic. Image: `invdefenderde31c4da.azurecr.io/invisible-defender:analyst-v43-20261024164952`.
+Image digest: `sha256:2668f9f8a805573ce5ca9bcc30eb34b89740c2a40f747c69220203358eb096d6`.
+
+Only the image/revision was updated. Existing Container App, registry, environment,
+identity, RBAC, model deployment, resource allocation, single-revision mode and
+routing settings were reused. Production mode and `Narration__DiagnosticsEnabled=false`
+were confirmed after rollout. No Azure resources were provisioned.
+
+Before deployment, all 244 backend checks, frontend build/four tests and exact
+non-root container smoke, production/isolation, explanation fallback/facts/rate-limit
+and API-backed frontend tests passed. The 15-response diagnostic batch revalidated
+through the final safety checks accepted 7 and rejected 8; see
+[counts, rejection reasons and limitations](ANALYST_VERIFICATION.md).
+
+Public verification on the new ready revision passed:
+
+- `AUDIENCES=analyst REQUIRE_GENERATED=1 INSIGHT_INDEX=0` with
+  `foundry-public.mjs`: first request was **generated**, followed by identical
+  **cached** responses for repeat and independent visitor. Full server-owned
+  actual/previous measurements, significance, event references and fact IDs matched
+  domain evidence. Invalid input checks passed.
+- A further read of the same cache entry retained the narrative and authoritative
+  facts; synthetic response captured locally at `.artifacts/public-analyst-v43.json`.
+- Public smoke, production assets, SPA refresh, real SignalR/WebSocket delivery,
+  visitor isolation and all four API-backed frontend lifecycle tests passed.
+- Prior revision `invisible-defender--analyst-final` remains retained, inactive,
+  with image `invdefenderde31c4da.azurecr.io/invisible-defender:analyst-fix-20261024`.
+
+Rollback remains available using the retained previous image (do not delete it):
+
+```powershell
+az containerapp update -g rg-football-hackathon -n invisible-defender --image invdefenderde31c4da.azurecr.io/invisible-defender:analyst-fix-20261024 --revision-suffix rollback-analyst-v43
+```
+
+A rollback/restart clears process-local sessions and cache. No rollback was executed.
+Public success does not establish universal generation reliability: the final
+diagnostic still rejected 8/15 outputs safely, and lexical guards are not a general
+semantic entailment proof.
+
+## Earlier analyst-final investigation
+
+## Current release: Analyst facts/commentary separation (2026-10-24)
+
+Final revision: **`invisible-defender--analyst-v43`**. Latest and ready both match;
+the revision is Healthy/Provisioned with one replica and 100% latest-revision
+traffic. Image: `invdefenderde31c4da.azurecr.io/invisible-defender:analyst-v43-20261024164952`.
+Image digest: `sha256:2668f9f8a805573ce5ca9bcc30eb34b89740c2a40f747c69220203358eb096d6`.
+
+Only the image/revision was updated. Existing Container App, registry, environment,
+identity, RBAC, model deployment, resource allocation, single-revision mode and
+routing settings were reused. Production mode and `Narration__DiagnosticsEnabled=false`
+were confirmed after rollout. No Azure resources were provisioned.
+
+Before deployment, all 244 backend checks, frontend build/four tests and exact
+non-root container smoke, production/isolation, explanation fallback/facts/rate-limit
+and API-backed frontend tests passed. The 15-response diagnostic batch revalidated
+through the final safety checks accepted 7 and rejected 8; see
+[counts, rejection reasons and limitations](ANALYST_VERIFICATION.md).
+
+Public verification on the new ready revision passed:
+
+- `AUDIENCES=analyst REQUIRE_GENERATED=1 INSIGHT_INDEX=0` with
+  `foundry-public.mjs`: first request was **generated**, followed by identical
+  **cached** responses for repeat and independent visitor. Full server-owned
+  actual/previous measurements, significance, event references and fact IDs matched
+  domain evidence. Invalid input checks passed.
+- A further read of the same cache entry retained the narrative and authoritative
+  facts; synthetic response captured locally at `.artifacts/public-analyst-v43.json`.
+- Public smoke, production assets, SPA refresh, real SignalR/WebSocket delivery,
+  visitor isolation and all four API-backed frontend lifecycle tests passed.
+- Prior revision `invisible-defender--analyst-final` remains retained, inactive,
+  with image `invdefenderde31c4da.azurecr.io/invisible-defender:analyst-fix-20261024`.
+
+Rollback remains available using the retained previous image (do not delete it):
+
+```powershell
+az containerapp update -g rg-football-hackathon -n invisible-defender --image invdefenderde31c4da.azurecr.io/invisible-defender:analyst-fix-20261024 --revision-suffix rollback-analyst-v43
+```
+
+A rollback/restart clears process-local sessions and cache. No rollback was executed.
+Public success does not establish universal generation reliability: the final
+diagnostic still rejected 8/15 outputs safely, and lexical guards are not a general
+semantic entailment proof.
+
+## Earlier analyst-final investigation
+
+Status (2026-10-24, narration follow-up): final revision `invisible-defender--analyst-final` runs image `invdefenderde31c4da.azurecr.io/invisible-defender:analyst-fix-20261024` with `ASPNETCORE_ENVIRONMENT=Production` and `Narration__DiagnosticsEnabled=false`. Fresh public Analyst generation, both-audience repeated and independent-visitor caching, playback, WebSockets, visitor isolation and API-backed frontend lifecycle passed. The original revision `invisible-defender--0000009` remains retained and inactive for rollback (verified by revision show; use revision list --all to include inactive revisions). No resources, identity, RBAC or billing settings were changed.
+
+Additional verification: the user confirmed latest=ready=`invisible-defender--analyst-final` and 100% traffic on that revision. Repeated uncached Analyst probes across all five ranked moments still reproduce validation rejections. The earlier isolated success/cache checks do not establish generation reliability. See [per-moment investigation](ANALYST_VERIFICATION.md). No routing or infrastructure changes were made; the local diagnostic attribution fix is not deployed.
+
+The diagnostic investigation confirmed complete HTTP 200 responses rejected locally for `spelled_measurement`; a separate older `analyst_requirements` rejection remains unclassified beyond that composite rule. Prompt v3.2 repeats the supplied numeric coverage threshold for Analyst; validation acceptance and the 650-token limit remain unchanged. See [diagnosis and limits](FOUNDRY_EXPLANATIONS.md#production-analyst-investigation-2026-10-24). Casual's unchanged prompt still occasionally produces correctly rejected output. Successful inference does not guarantee every stochastic response will validate. Final console verification found zero custom narration diagnostic lines. Native browser pointer-capture QA remains separate.
+
+## Original deployment results (2026-10-24, before narration follow-up)
 
 Public URL: https://invisible-defender.purplemushroom-8d506c25.westus3.azurecontainerapps.io
 

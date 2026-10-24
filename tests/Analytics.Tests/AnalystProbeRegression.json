@@ -1,0 +1,764 @@
+[
+  {
+    "run": "live-probe-output.log",
+    "round": 1,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B5’s Strategic Alignment Reduces Passing Options to A3",
+      "explanation": "The recorded sequence shows player A2 carrying the ball through several moments, while defender B5's position changed relative to a candidate passing segment to receiver A3. Initially, B5 was 3.02 metres from the passing segment with no blockers covering the lane. By the next snapshot, B5 moved to 1.51 metres from the passing segment, which is within the coverage threshold of 2 metres, resulting in B5 being classified as a blocker. This alignment effectively signifies a shift in defensive geometry that corresponds with a newly covered passing option to A3.",
+      "evidenceEventIds": [
+        "synthetic-001:076",
+        "synthetic-001:077",
+        "synthetic-001:078",
+        "synthetic-001:079",
+        "synthetic-001:080",
+        "synthetic-001:081"
+      ],
+      "limitations": [
+        "The data quantifies coverage but does not assign intent or causality to player movements."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 1,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "expectedRule": "analyst_derivation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:081",
+        "event:synthetic-001:083",
+        "event:synthetic-001:084",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Recovery by B5 on Pass Attempt from A2 to A3",
+      "explanation": "This sequence shows a carry by player A2 followed by a pass attempt targeting player A3. Defender B5 is recorded to be exactly 0 metres from the passing segment between A2 and A3, both in the current and previous measurements, indicating precise alignment with the potential passing path. There is a coverage threshold of 2 metres, within which B5 is identified as a blocker of the candidate receiver A3, implying close defensive positioning. Subsequently, interception by B5 is registered, confirming a possession change in favor of the defense without evidence linking the previous coverage directly to the interception outcome.",
+      "evidenceEventIds": [
+        "synthetic-001:081",
+        "synthetic-001:083",
+        "synthetic-001:084"
+      ],
+      "limitations": [
+        "The data does not specify the exact moment or action that facilitated possession recovery."
+      ]
+    },
+    "v4ExpectedRule": "unsupported_causation",
+    "v4ExpectedField": "limitations[0]"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 1,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Pressure and Lane Coverage in Backward Pass Sequence",
+      "explanation": "Player A1 experienced recorded pressure before carrying the ball and attempting a pass to A4, which completed successfully, indicating a dynamic play sequence. During the carry, defender B1 maintained a consistent proximity of 0.22 metres from the passing segment to candidate receiver A2, aligning within the coverage threshold of 2 metres and classified as a geometric blocker. This coverage threshold marks the spatial context reflecting defensive positioning relative to potential passing options. The observations combine recorded events and derived spatial analysis to highlight how defensive alignment correlates with passing options in play, though direct causation between pressure and pass direction remains unproven.",
+      "evidenceEventIds": [
+        "synthetic-001:006",
+        "synthetic-001:009",
+        "synthetic-001:011",
+        "synthetic-001:012"
+      ],
+      "limitations": [
+        "The relationship between defender positioning and the backward pass direction cannot be definitively determined."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 1,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "expectedRule": "analyst_derivation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:033",
+        "event:synthetic-001:035",
+        "event:synthetic-001:036",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Alignment and Passing Dynamics in a Redirection Sequence",
+      "explanation": "Player A2 was recorded under pressure and carried the ball before attempting a pass to teammate A1, who completed the reception. Defender B3 aligned exactly on the candidate passing segment from A2 to A3, as shown by a zero metre measurement in both current and previous snapshots. The coverage threshold is 2 metres, with B3 identified as the blocker covering the passing option to A3. A backward or sideways pass completion followed this measured coverage, reflecting defensive context and passing adaptation without confirming causation.",
+      "evidenceEventIds": [
+        "synthetic-001:030",
+        "synthetic-001:033",
+        "synthetic-001:035",
+        "synthetic-001:036"
+      ],
+      "limitations": [
+        "Causation between the defender's position and the passing choices cannot be confirmed."
+      ]
+    },
+    "v4ExpectedRule": "spelled_measurement",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 1,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:057",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Alignment of Defender B4 with Candidate Passing Segment from A3 to A2",
+      "explanation": "Player A3 experienced recorded pressure followed by a carry and then completed a pass to player A5. The derived analysis focuses on defender B4’s position relative to a candidate passing segment from A3 to A2, who was not the pass target. Both previous and actual snapshots show B4 is 0 metres from this segment, which falls within the coverage threshold of 2 metres, indicating geometric coverage by B4. This observation reveals an alternative passing option covered by a defender without asserting causality for A3's actual passing decisions.",
+      "evidenceEventIds": [
+        "synthetic-001:054",
+        "synthetic-001:057",
+        "synthetic-001:059",
+        "synthetic-001:060"
+      ],
+      "limitations": [
+        "Temporal association does not imply causation."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 2,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "expectedRule": "analyst_observation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:077",
+        "event:synthetic-001:078",
+        "event:synthetic-001:079",
+        "event:synthetic-001:080",
+        "event:synthetic-001:081",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Coverage Shift on Passing Lane to Player A3",
+      "explanation": "Player A2 carried the ball through successive events without a specified target receiver, showing continuity in possession. The defender B5's position changed from 3.02 metres to 1.51 metres from the candidate passing segment between A2 and A3, bringing B5 within the coverage threshold of 2 metres. Initially, no blockers were geometrically covering the lane to A3, but at the actual snapshot B5 is identified as a blocker. This movement corresponds to the defender's alignment with the lane, indicating a shift in geometric coverage of passing options during this interval.",
+      "evidenceEventIds": [
+        "synthetic-001:076",
+        "synthetic-001:077",
+        "synthetic-001:078",
+        "synthetic-001:079",
+        "synthetic-001:080",
+        "synthetic-001:081"
+      ],
+      "limitations": [
+        "The precise impact of this defender movement on passing decisions is not determinable from the available data."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-output.log",
+    "round": 2,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage",
+        "event:synthetic-001:081",
+        "event:synthetic-001:083",
+        "event:synthetic-001:084"
+      ],
+      "title": "Defensive Coverage and Recovery on the Passing Segment from A2 to A3",
+      "explanation": "Player A2 carried the ball before attempting a pass to A3, as recorded in sequential events. Defender B5 was aligned precisely on the candidate passing segment from A2 to A3 with a measured distance of 0 metres at both the actual and previous snapshot, indicating geometric coverage. The coverage threshold of 2 metres was met by B5 consistently, designating B5 as a blocker of the passing option to A3. Subsequently, defender B5 recovered possession, as confirmed by the interception event, marking a defensive recovery during this sequence.",
+      "evidenceEventIds": [
+        "synthetic-001:081",
+        "synthetic-001:083",
+        "synthetic-001:084"
+      ],
+      "limitations": [
+        "The recorded data does not confirm the defender’s influence on pass selection or interception outcome."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 1,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:077",
+        "event:synthetic-001:078",
+        "event:synthetic-001:079",
+        "event:synthetic-001:080",
+        "event:synthetic-001:081",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Coverage Shift by B5 Alters Passing Option for A2 to A3",
+      "explanation": "Between events synthetic-001:076 and synthetic-001:077, defender B5's alignment to the passing segment from carrier A2 to candidate receiver A3 changed from 3.02 metres to 1.51 metres, crossing the coverage threshold of 2 metres. This resulted in B5 becoming a blocker on this passing segment, as observed across six continuous events involving A2's carries and pressure. The coverage threshold of 2 metres is a geometric classification for lane coverage, indicating that B5's position met the criteria for covering the passing option to A3 at the later snapshot. These observations illustrate momentary defensive adjustments impacting potential passing paths without inferring causality.",
+      "evidenceEventIds": [
+        "synthetic-001:076",
+        "synthetic-001:077",
+        "synthetic-001:078",
+        "synthetic-001:079",
+        "synthetic-001:080",
+        "synthetic-001:081"
+      ],
+      "limitations": [
+        "The spatial measurements do not confirm the defender's influence on any passing decision or play outcome."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 1,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B5 Coverage of Passing Segment to A3 During A2's Carry and Pass Attempt",
+      "explanation": "The sequence records player A2 carrying the ball and then attempting a pass to player A3, followed by an interception by defender B5. Defensive measurements show that defender B5's position was 0 metres from the passing segment to A3, establishing geometric alignment with that option. Additionally, B5 is identified as a blocker of receiver A3 with a coverage threshold of 2 metres at both the actual and previous measurement snapshots. This defensive context is important as it documents B5's continuous geometric presence on the passing segment before the interception event. Limitation: No inference is made about defender B5's intention or effect on passing decisions.",
+      "evidenceEventIds": [
+        "synthetic-001:081",
+        "synthetic-001:083",
+        "synthetic-001:084"
+      ],
+      "limitations": [
+        "This analysis does not determine causation between defender alignment and interception outcome."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 1,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Coverage and Passing Dynamics in Defensive Context",
+      "explanation": "Player A1 experienced pressure recorded during event synthetic-001:006 and maintained ball control as noted in synthetic-001:009. Subsequently, A1 attempted a pass to A4 in event synthetic-001:011, which was completed successfully as per synthetic-001:012. Derived observations indicate defender B1's position 0.22 metres from the candidate passing segment to A2, consistently measured in both previous and actual snapshots. This proximity and the coverage threshold of 2 metres establish B1 as a geometric blocker of the passing option, affecting the options visually available to A1.",
+      "evidenceEventIds": [
+        "synthetic-001:006",
+        "synthetic-001:009",
+        "synthetic-001:011",
+        "synthetic-001:012"
+      ],
+      "limitations": [
+        "This analysis does not confirm causation between defender coverage and passing decision."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 1,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:033",
+        "event:synthetic-001:035",
+        "event:synthetic-001:036",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B3 Maintains Alignment on Passing Segment During Backward Pass",
+      "explanation": "Recorded events show player A2 under pressure (event:synthetic-001:030), carrying the ball (event:synthetic-001:033), then attempting a pass to player A1 (event:synthetic-001:035) which is subsequently completed (event:synthetic-001:036). During this sequence, defender B3 is measured at zero metres from the candidate passing segment between carrier A2 and receiver A3, both in the previous and actual snapshots, indicating a continuous alignment with this segment. The defender is within the coverage threshold of 2 metres, confirmed by geometric coverage analysis listing B3 as a blocker for receiver A3. This analysis distinguishes observed player positioning from the passing actions, without presuming causation or player intent in the defensive positioning or pass direction.",
+      "evidenceEventIds": [
+        "synthetic-001:030",
+        "synthetic-001:033",
+        "synthetic-001:035",
+        "synthetic-001:036"
+      ],
+      "limitations": [
+        "The analysis does not confirm any impact on the pass choice or outcome by the defender’s position."
+      ]
+    },
+    "v4ExpectedRule": "spelled_measurement",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 1,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:057",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Alignment with Candidate Passing Segment during Backward or Sideways Pass",
+      "explanation": "Player A3 carried the ball after pressure was recorded at event synthetic-001:054 and synthetic-001:057, followed by a pass attempt to A5 at synthetic-001:059, which completed successfully to A5 at synthetic-001:060. Defender B4 was aligned exactly on the passing segment to candidate receiver A2, with a measured distance of 0 metres from this segment in both the actual and previous snapshots. This coverage persisted under a coverage threshold of 2 metres, identifying B4 as a geometric blocker for the candidate passing option to A2. The observations highlight B4's continuous positioning on a candidate lane while a backward or sideways pass occurred; this does not confirm causation of the passing decision.",
+      "evidenceEventIds": [
+        "synthetic-001:054",
+        "synthetic-001:057",
+        "synthetic-001:059",
+        "synthetic-001:060"
+      ],
+      "limitations": [
+        "Measurements do not establish causal relationships between defender position and pass selection."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 2,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "expectedRule": "analyst_observation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B5's Geometric Coverage on Pass from A2 to A3",
+      "explanation": "Player A2 was carrying the ball over a sequence of events while defender B5 adjusted position relative to the passing segment to candidate receiver A3. Initially, B5 was 3.02 metres from the passing segment, which exceeded the coverage threshold of 2 metres, meaning no blockers were counted. Later, B5 moved to 1.51 metres from this passing segment, crossing the coverage threshold and becoming a blocker. This change reflects defender B5’s increasing geometric alignment with the candidate passing option, providing notable coverage context during the ball carrier’s progression.",
+      "evidenceEventIds": [
+        "synthetic-001:076",
+        "synthetic-001:077",
+        "synthetic-001:078",
+        "synthetic-001:079",
+        "synthetic-001:080",
+        "synthetic-001:081"
+      ],
+      "limitations": [
+        "This analysis only addresses geometric coverage and does not infer defender intentions or pass outcomes."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 2,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B5 Maintains Alignment with Passing Segment Under Coverage Threshold",
+      "explanation": "During the recorded sequence, player A2 carried the ball before attempting a pass to player A3, which player B5 intercepted, marking a possession change. Defensive snapshots show that defender B5 was aligned with the candidate passing segment between A2 and A3, with a measured defenderDistanceMetres of 0 metres at both the actual and previous snapshots. Player B5 is identified as a geometric blocker for receiver A3, satisfying the coverage threshold of 2 metres, indicating close lane monitoring. While this coverage context is observable, the exact influence on the interception event is not determinable from these data alone.",
+      "evidenceEventIds": [
+        "synthetic-001:081",
+        "synthetic-001:083",
+        "synthetic-001:084"
+      ],
+      "limitations": [
+        "Measurements describe spatial alignment but do not confirm defensive causality."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 2,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Alignment and Passing Options Under Pressure",
+      "explanation": "In the recorded sequence, player A1 experienced pressure while carrying the ball, followed by a pass attempt and completion to player A4. Defender B1 was positioned at a distance of 0.22 metres from the passing segment between carrier A1 and candidate receiver A2 in both previous and actual measurement snapshots. The coverage threshold of 2 metres classifies B1 as a blocker of the passing option to A2, indicating geometric coverage. These observations separate recorded actions from derived spatial analysis of defender positioning and passing lanes, without attributing causality to the defender's placement.",
+      "evidenceEventIds": [
+        "synthetic-001:006",
+        "synthetic-001:009",
+        "synthetic-001:011",
+        "synthetic-001:012"
+      ],
+      "limitations": [
+        "The relationship between defender positioning and passing decisions remains observational without inferred causality."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 2,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "expectedRule": "spelled_measurement",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:033",
+        "event:synthetic-001:035",
+        "event:synthetic-001:036",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive alignment on a candidate passing segment",
+      "explanation": "Player A2 underwent pressure and carried the ball before attempting a pass to teammate A1, which was completed successfully. Defender B3 remained aligned with the candidate passing segment between carrier A2 and receiver A3, maintaining a zero metres perpendicular distance to this segment at both previous and actual snapshots. The coverage threshold for this scenario was 2 metres, with B3 meeting this threshold consistently and identified as the sole blocker of receiver A3. This setup corresponded with a backward or sideways pass directionally shifting play without establishing the target as the actual recipient.",
+      "evidenceEventIds": [
+        "synthetic-001:030",
+        "synthetic-001:033",
+        "synthetic-001:035",
+        "synthetic-001:036"
+      ],
+      "limitations": [
+        "The analysis cannot determine whether the defender's alignment affected the passing decision."
+      ]
+    },
+    "v4ExpectedRule": "spelled_measurement",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 2,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "expectedRule": "analyst_observation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:057",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Alignment and Passing Options in a Pressure Situation",
+      "explanation": "Player A3 handled the ball under pressure and carried it before attempting a pass to player A5 that was completed successfully. During this sequence, defender B4 was geometrically aligned exactly on the candidate passing segment between carrier A3 and candidate receiver A2, both in the actual and previous measurement snapshots. The coverage threshold of 2 metres classifies B4 as a blocker for this candidate passing lane. This scenario illustrates defensive positioning constraining passing options, without interpreting causality regarding passing decisions or outcomes.",
+      "evidenceEventIds": [
+        "synthetic-001:054",
+        "synthetic-001:057",
+        "synthetic-001:059",
+        "synthetic-001:060"
+      ],
+      "limitations": [
+        "The definitive impact of defender positioning on passing decisions cannot be established from the data."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 3,
+    "rank": 1,
+    "insightId": "synthetic-001:072:PassingLaneDenial:B5:A2:A3:synthetic-001:077",
+    "fingerprint": "068C8A91602A69794C0E74EC10A6CCC97CE393960CAC12A4FDE4F14B9B78895D",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:076",
+        "event:synthetic-001:077",
+        "event:synthetic-001:078",
+        "event:synthetic-001:079",
+        "event:synthetic-001:080",
+        "event:synthetic-001:081",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defensive Coverage Shift on Passing Lane from A2 to A3",
+      "explanation": "Player A2 carries the ball through a sequence of events, with defender B5 in close positional relation. Initially, B5’s distance to the candidate passing segment from A2 to receiver A3 was 3.02 metres, exceeding the coverage threshold of 2 metres, indicating no geometric coverage at that time. Later, B5's distance decreased to 1.51 metres, placing B5 within the coverage threshold and geometrically covering the lane to A3. This transition illustrates a dynamic change in defensive positioning against a specific passing option rather than implying a disrupted pass or explicit defensive intent.",
+      "evidenceEventIds": [
+        "synthetic-001:076",
+        "synthetic-001:077",
+        "synthetic-001:078",
+        "synthetic-001:079",
+        "synthetic-001:080",
+        "synthetic-001:081"
+      ],
+      "limitations": [
+        "The geometric coverage threshold provides a spatial classification but does not quantify actual obstruction or defensive success."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "explanation"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 3,
+    "rank": 2,
+    "insightId": "synthetic-001:072:DefensiveRecovery:B5:A2:A3:synthetic-001:084",
+    "fingerprint": "FEFB2CD43B6E17DA227F6563B11ACE88DDAC5BA8184708A76704ED552C18E3F1",
+    "expectedRule": "analyst_derivation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:081",
+        "event:synthetic-001:083",
+        "event:synthetic-001:084",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Close Defensive Alignment and Possession Turnover",
+      "explanation": "Player A2 carried the ball and then attempted a pass to player A3, which was intercepted by defender B5. Measurements show that B5 was aligned exactly on the candidate passing segment between A2 and A3 at both the current and previous snapshot. The coverage threshold is 2 metres, and B5 was the sole blocker within this threshold, indicating tight defensive positioning over time. These observations detail the sequence from ball carry to possession recovery, highlighting defender B5’s close alignment with the passing option, but do not provide a definitive causal relationship for the interception.",
+      "evidenceEventIds": [
+        "synthetic-001:081",
+        "synthetic-001:083",
+        "synthetic-001:084"
+      ],
+      "limitations": [
+        "The sequence shows correlation but does not establish causation between defender position and interception outcome."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 3,
+    "rank": 3,
+    "insightId": "synthetic-001:000:AttackingRedirection:B1:A1:A2:synthetic-001:012",
+    "fingerprint": "DA7874C673EBA308E9EB646237FE9EE1E04B59628029B7355D96B4C692D904C8",
+    "expectedRule": "numeric_grounding",
+    "expectedField": "title",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:006",
+        "event:synthetic-001:009",
+        "event:synthetic-001:011",
+        "event:synthetic-001:012",
+        "moment",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage"
+      ],
+      "title": "Defender B1's Position Affects Candidate Passing Option to A2 with Coverage Threshold of 2 Metres",
+      "explanation": "The sequence shows player A1 receiving pressure and carrying the ball before attempting a pass to A4, which was completed successfully. A derived insight identifies defender B1 positioned 0.22 metres from the candidate passing segment between the ball carrier A1 and candidate receiver A2, creating geometric coverage within a coverage threshold of 2 metres. The same defense alignment appears consistent in previous and actual snapshots, with B1 counted as a blocker covering the option to A2. This information helps understand spatial dynamics impacting passing options without inferring causation or intentions.",
+      "evidenceEventIds": [
+        "synthetic-001:006",
+        "synthetic-001:009",
+        "synthetic-001:011",
+        "synthetic-001:012"
+      ],
+      "limitations": [
+        "The exact impact of the defender's position on passing decisions remains uncertain."
+      ]
+    },
+    "v4ExpectedRule": "numeric_grounding",
+    "v4ExpectedField": "title"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 3,
+    "rank": 4,
+    "insightId": "synthetic-001:024:AttackingRedirection:B3:A2:A3:synthetic-001:036",
+    "fingerprint": "5066982484D15551F9DB962B2A90263EE93D7B8545CC0DC74377E65234FB8941",
+    "expectedRule": "validated",
+    "expectedField": "response",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:030",
+        "event:synthetic-001:033",
+        "event:synthetic-001:035",
+        "event:synthetic-001:036",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage",
+        "moment"
+      ],
+      "title": "Defensive Alignment and Pass Dynamics in a Midfield Sequence",
+      "explanation": "Player A2 was recorded under pressure before carrying the ball and then attempting a pass to teammate A1, which was completed successfully. Defender B3 maintained alignment on the passing segment from A2 to another candidate receiver A3, with a measured distance of 0 metres both previously and currently. The geometric coverage threshold of 2 metres defined the defensive coverage, confirming B3 as a blocker of option A3. This sequence illustrates the defensive positioning and passing choices without inferring any causal influence on the pass outcome.",
+      "evidenceEventIds": [
+        "synthetic-001:030",
+        "synthetic-001:033",
+        "synthetic-001:035",
+        "synthetic-001:036"
+      ],
+      "limitations": [
+        "Measurement does not prove player intent or pass outcome causation."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  },
+  {
+    "run": "live-probe-paced.log",
+    "round": 3,
+    "rank": 5,
+    "insightId": "synthetic-001:048:AttackingRedirection:B4:A3:A2:synthetic-001:060",
+    "fingerprint": "AD501C793E23328B8E436AFD06008608C2F7A1411D6E66E033B67D3224DAC12E",
+    "expectedRule": "analyst_observation",
+    "expectedField": "explanation",
+    "narrative": {
+      "evidenceFactIds": [
+        "event:synthetic-001:054",
+        "event:synthetic-001:057",
+        "event:synthetic-001:059",
+        "event:synthetic-001:060",
+        "actual:lane-distance",
+        "actual:coverage",
+        "previous:lane-distance",
+        "previous:coverage",
+        "moment"
+      ],
+      "title": "Defender B4 Maintains Close Alignment to Passing Segment to A2 Under Pressure",
+      "explanation": "Player A3 experienced pressure and then carried the ball before attempting a pass to teammate A5, which was completed successfully. Defender B4 maintained a distance of 0 metres from the candidate passing segment between carrier A3 and receiver A2 in both previous and actual snapshots. The geometric coverage threshold used to determine blocking is 2 metres, confirming that B4 is classified as a blocker of the option to A2. This moment highlights the defender's sustained alignment with a critical passing segment during a sequence of passing decisions under pressure. ",
+      "evidenceEventIds": [
+        "synthetic-001:054",
+        "synthetic-001:057",
+        "synthetic-001:059",
+        "synthetic-001:060"
+      ],
+      "limitations": [
+        "Measurement snapshots do not prove defender influence on pass choices."
+      ]
+    },
+    "v4ExpectedRule": "validated",
+    "v4ExpectedField": "response"
+  }
+]

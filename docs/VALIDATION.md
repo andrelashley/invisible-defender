@@ -1,5 +1,54 @@
 # Validation results
 
+## Current Analyst facts/commentary release (2026-10-24, v4.3)
+
+- Backend build: zero warnings/errors; **244 checks passed**, including all prior
+  captured fixtures, all 15 new responses, concise no-number commentary, numeric
+  grounding, action/player/causal rejection, evidence references and authoritative
+  facts across generated/cache/mock/fallback responses.
+- Frontend build and four tests passed; measurements/scores/references render before
+  inference independently of prose. Casual system prompt/schema and constraints
+  remain unchanged.
+- New 15-request uncached batch: no HTTP failures/timeouts. Revalidation using final
+  v4.3 guards: **7 accepted, 8 rejected** (causation 3, unrecorded pressure actor 3,
+  unsupported physical/predictive claim 1, unsupported event 1). No numeric or
+  mandatory observation/derivation wording failures. Small sample; not a guarantee
+  or statistical estimate of future success.
+- Exact local production container passed smoke, isolation/WebSockets, fallback
+  fact presentation, invalid inputs, rate limiting and API-backed frontend tests.
+- Deployed existing app revision **`invisible-defender--analyst-v43`**: healthy,
+  latest=ready, 100% traffic. Fresh real Analyst response and repeat/independent
+  visitor cache reuse passed, as did public smoke/production/frontend tests.
+- `analyst-final` and its previous image remain retained for rollback; no new Azure
+  resources, identity/RBAC, routing settings or model changes.
+
+See [detailed diagnostic findings](ANALYST_VERIFICATION.md) and
+[release/rollback record](DEPLOYMENT.md).
+
+## Repeated uncached Analyst follow-up (2026-10-24)
+
+The user confirmed the expected production revision is latest, ready and receiving
+100% of traffic. The expanded live probe tests all five UI-ranked moments over
+three uncached Analyst rounds against the existing deployment using local Azure
+credentials. Rejections remain reproducible. See [full results and limitations](ANALYST_VERIFICATION.md).
+No Azure routing or infrastructure was changed. The numerical diagnostic field
+attribution correction and captured-response regression fixtures are local only.
+The paced run completed 15 responses: 4 validated, 11 rejected, no HTTP failures
+or timeouts. First failures: numeric_grounding 6, analyst_observation 3,
+analyst_derivation 1, spelled_measurement 1. Backend build: zero warnings/errors;
+all 194 offline checks passed, including all 22 captured completed responses
+from the rapid and paced probes. The live generation gate remains failing.
+
+## Production narration follow-up (2026-10-24)
+
+- Backend build: zero warnings/errors; all 168 backend checks passed. Added safe diagnostic-field/opt-in checks, constructed spelled-measurement regression with uncached fallback, and exact numeric Analyst prompt regression. Existing audience, numerical relationship, unsupported causation, evidence IDs, malformed response, caching, deduplication and timeout checks passed.
+- Frontend build and all four frontend tests passed; the same four tests also passed against local production containers and the final public deployment with real SignalR delivery.
+- Corrected local production container: smoke, production/isolation and Disabled-provider explanation/fallback/rate-limit integration suites passed.
+- Final public revision `invisible-defender--analyst-final`: fresh Analyst request for the previously failing key moment returned `generated`. The strict `foundry-public.mjs` suite with `INSIGHT_INDEX=4` passed both audiences, repeated caching, independent-visitor cache reuse, valid event references and invalid inputs. This passed after diagnostics were disabled.
+- Final public smoke and production suites passed: playback, replay, evidence, counterfactual isolation, real WebSockets, assets, origins and visitor isolation. An earlier smoke crossed the final revision rollout and saw reset in-memory playback state; rerunning once ingress settled passed.
+- Production mode retained; diagnostic flag false and zero custom narration diagnostic lines confirmed. Original revision `invisible-defender--0000009` retained inactive for rollback. No Azure resources, identity, RBAC or billing settings changed.
+- Limits: original rejected prose was never logged. One earlier composite Analyst requirements failure remains unclassified; subsequent HTTP 200 rejection was confirmed as `spelled_measurement`. Existing Casual stochastic unsupported-language rejection was observed before a second explicit attempt passed. No validator was weakened and no automatic model retries were added. See [full investigation](FOUNDRY_EXPLANATIONS.md#production-analyst-investigation-2026-10-24).
+
 ## Azure deployment verification (2026-10-24)
 
 Production Docker build/run, all 163 ordinary backend checks, frontend build, four frontend checks, and local/public HTTP plus real SignalR suites passed. Public playback/replay, evidence, counterfactual isolation, two-visitor REST/WSS isolation, fallback/outage recovery, rate limiting and API-backed SVG lifecycle passed. Foundry was restored after outage testing; final app is healthy with one replica. Public Casual Fan generation and independent-visitor backend caching passed. Public Analyst requests repeatedly fell back, so the strict two-audience live Foundry suite remains failing. Local opt-in live diagnostics also reproduce variable prose validation; ordinary regressions pass. No native browser surface was available. See [deployment results and remaining issues](DEPLOYMENT.md).
