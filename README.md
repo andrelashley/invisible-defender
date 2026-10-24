@@ -45,3 +45,5 @@ Live mode contains only observed events. **Browse complete synthetic replay**
 opens the full catalogue explicitly. Select a moment to freeze its defensive
 positioning and explore hypothetical moves; **Return to live** or **Resume**
 restores current playback. See [insight rules and API](docs/DEFENSIVE_INSIGHTS.md).
+
+On-demand explanations are available for selected defensive moments in Casual Fan and Analyst modes. Click **Generate AI Explanation** explicitly; playback, selection and mode changes consume no AI tokens. Without Foundry configuration, the application returns a labeled deterministic fallback. See [Foundry configuration, caching, authentication and manual verification](docs/FOUNDRY_EXPLANATIONS.md). For token-free UI development set `Narration__Provider=Mock` on the API.

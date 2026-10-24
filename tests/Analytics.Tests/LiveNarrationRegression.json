@@ -1,0 +1,52 @@
+{
+  "casual": {
+    "title": "Defender Moves to Close Passing Option",
+    "explanation": "At first, a passing option was open and not covered by any defender. Then, the defender shifted closer, causing that passing option to become covered, changing the space available to the player with the ball. This highlights how defenders adjust their positioning to limit passing choices during play.",
+    "evidenceFactIds": [
+      "moment",
+      "actual:lane-distance",
+      "actual:coverage",
+      "previous:lane-distance",
+      "previous:coverage"
+    ],
+    "evidenceEventIds": [
+      "synthetic-001:076",
+      "synthetic-001:077",
+      "synthetic-001:078",
+      "synthetic-001:079",
+      "synthetic-001:080",
+      "synthetic-001:081"
+    ],
+    "limitations": [
+      "This explanation does not comment on player intentions or outcomes of the pass."
+    ]
+  },
+  "analyst": {
+    "title": "Defensive Coverage Impact on Passing Option from A2 to A3",
+    "explanation": "Player A2 carried the ball through six successive recorded events without a designated pass target. During this time, defender B5 moved from 3.02 metres to 1.51 metres distance from the passing segment connecting A2 and A3, crossing the 2 metres coverage threshold. This change indicates that B5's positioning altered the geometric availability of passing to A3. The recorded defender movement coincides with a previously uncovered passing option becoming geometrically covered, providing insight into defensive spatial influence.",
+    "evidenceFactIds": [
+      "event:synthetic-001:076",
+      "event:synthetic-001:077",
+      "event:synthetic-001:078",
+      "event:synthetic-001:079",
+      "event:synthetic-001:080",
+      "event:synthetic-001:081",
+      "moment",
+      "actual:lane-distance",
+      "actual:coverage",
+      "previous:lane-distance",
+      "previous:coverage"
+    ],
+    "evidenceEventIds": [
+      "synthetic-001:076",
+      "synthetic-001:077",
+      "synthetic-001:078",
+      "synthetic-001:079",
+      "synthetic-001:080",
+      "synthetic-001:081"
+    ],
+    "limitations": [
+      "The observations do not include player intentions or distinguish actual pass attempts."
+    ]
+  }
+}

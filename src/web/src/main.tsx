@@ -20,6 +20,31 @@ function App() {
   const [replay, setReplay] = useState(false);
   const [replayInsights, setReplayInsights] = useState<DefensiveInsight[]>([]);
   const [inspected, setInspected] = useState<MatchState>();
+  const [audience, setAudience] = useState('casual');
+  type Narration = { narrative: { title: string; explanation: string; evidenceEventIds: string[]; limitations: string[] }; source: string };
+  const [narration, setNarration] = useState<{ key: string; value?: Narration; loading?: boolean; error?: string }>();
+  const narrationKey = JSON.stringify([chosenInsight, audience, replay]);
+  const narrationSelection = useRef(narrationKey);
+  const narrationRequest = useRef(0);
+  if (narrationSelection.current !== narrationKey) {
+    narrationSelection.current = narrationKey;
+    narrationRequest.current++;
+  }
+  async function generateExplanation() {
+    if (!chosenInsight || (narration?.key === narrationKey && narration.loading)) return;
+    const key = narrationKey, request = ++narrationRequest.current;
+    setNarration({ key, loading: true });
+    try {
+      const response = await fetch('/api/explanations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: chosenInsight.matchId, insightId: chosenInsight.id, audience, scope: replay ? 'replay' : 'live' }) });
+      if (!response.ok) throw new Error(response.status === 429 ? 'Request limit reached. Please try again shortly.' : 'Explanation unavailable. The analytical evidence remains available.');
+      const value: Narration = await response.json();
+      if (narrationSelection.current === key && narrationRequest.current === request) setNarration({ key, value });
+    } catch (e) {
+      if (narrationSelection.current === key && narrationRequest.current === request) setNarration({ key, error: String(e) });
+    }
+  }
+  const currentNarration = narration?.key === narrationKey ? narration : undefined;
   const replayRequest = useRef(0);
   async function loadReplay() {
     const request = ++replayRequest.current;
@@ -129,6 +154,25 @@ function App() {
       <ol className="event-timeline">{visibleMoments.map(moment => <li key={moment.event.id}><button key={moment.event.id} aria-pressed={inspected?.event.id === moment.event.id} onClick={() => inspectMoment(moment)}>{`${moment.event.timestamp.toFixed(1)} s | ${readable(moment.event.eventType ?? 'Observation')} | ${moment.event.scenario ?? ''} ? Possession ${moment.event.teamId}`}</button></li>)}</ol>
       </details>
     </section>
+    {chosenInsight && <section className="panel" aria-label="Insight explanation">
+      <h2>Explain this defensive moment</h2>
+      <p>{chosenInsight.title}: {chosenInsight.explanation}</p>
+      <p>Supporting events: {chosenInsight.supportingEventIds.join(', ')}</p>
+      <label>Audience <select value={audience} onChange={e => setAudience(e.target.value)}>
+        <option value="casual">Casual Fan</option><option value="analyst">Analyst</option>
+      </select></label>{' '}
+      <button disabled={currentNarration?.loading} onClick={() => void generateExplanation()}>Generate AI Explanation</button>
+      <div aria-live="polite">
+        {currentNarration?.loading && <p>Generating explanation? Playback continues.</p>}
+        {currentNarration?.error && <p role="alert">{currentNarration.error}</p>}
+        {currentNarration?.value && <>
+          <p className="badge">{{ generated: 'AI generated', cached: 'Cached AI explanation', fallback: 'Deterministic fallback', mock: 'Mock explanation (local testing)' }[currentNarration.value.source] ?? 'Deterministic fallback'}</p>
+          <h3>{currentNarration.value.narrative.title}</h3><p>{currentNarration.value.narrative.explanation}</p>
+          <p>Evidence: {currentNarration.value.narrative.evidenceEventIds.join(', ')}</p>
+          <ul>{currentNarration.value.narrative.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul>
+        </>}
+      </div>
+    </section>}
     {error && <p role="alert" className="error">{error}</p>}
     <div className="layout"><section className="panel">
       <div className="section-title"><h2>{scenario ? 'Hypothetical analysis' : (evidence || inspected) ? 'Evidence snapshot' : 'Live pitch'}</h2>{(evidence || inspected) && !scenario && <button onClick={returnToLive}>Return to live</button>}</div>

@@ -1,3 +1,8 @@
+using InvisibleDefender.Narration;
+using Azure.Core;
+using Azure.Identity;
+using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 using InvisibleDefender.Domain;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,7 +14,41 @@ builder.Services.AddSingleton<CounterfactualAnalyzer>();
 builder.Services.AddSingleton<SyntheticMatchGenerator>();
 builder.Services.AddSingleton<MatchPlayback>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MatchPlayback>());
+builder.Services.Configure<NarrationOptions>(builder.Configuration.GetSection("Narration"));
+builder.Services.AddSingleton<TokenCredential>(sp => {
+    var o = sp.GetRequiredService<IOptions<NarrationOptions>>().Value;
+    return o.ManagedIdentity
+        ? new ManagedIdentityCredential(string.IsNullOrWhiteSpace(o.ManagedIdentityClientId) ? ManagedIdentityId.SystemAssigned : ManagedIdentityId.FromUserAssignedClientId(o.ManagedIdentityClientId))
+        : new DefaultAzureCredential();
+});
+builder.Services.AddHttpClient<FoundryNarrator>(client => client.Timeout = Timeout.InfiniteTimeSpan);
+builder.Services.AddSingleton<IInsightNarrator>(sp => sp.GetRequiredService<IOptions<NarrationOptions>>().Value.Provider switch {
+    "Foundry" => sp.GetRequiredService<FoundryNarrator>(), "Mock" => new MockNarrator(), _ => new DisabledNarrator() });
+builder.Services.AddSingleton<NarrationDiagnostics>();
+builder.Services.AddSingleton<ExplanationService>();
+builder.Services.AddRateLimiter(options => {
+    options.RejectionStatusCode = 429;
+    options.AddPolicy("explanations", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions {
+            PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        context.Request.Path == "/api/explanations"
+        ? RateLimitPartition.GetConcurrencyLimiter("inference", _ => new ConcurrencyLimiterOptions { PermitLimit = 8, QueueLimit = 0 })
+        : RateLimitPartition.GetNoLimiter("playback"));
+});
 var app = builder.Build();
+app.UseRateLimiter();
+app.MapPost("/api/explanations", async (ExplanationRequest request, MatchPlayback match,
+    SyntheticMatchGenerator generator, DefensiveInsightEngine engine, ExplanationService explanations, CancellationToken cancellationToken) => {
+    if (request.Audience is not ("casual" or "analyst") || request.Scope is not ("live" or "replay") ||
+        string.IsNullOrWhiteSpace(request.MatchId) || string.IsNullOrWhiteSpace(request.InsightId))
+        return Results.BadRequest(new { error = "Known match, insight, audience and scope required." });
+    var known = request.Scope == "live" ? match.Snapshot().Insights! : engine.Analyze(
+        Enumerable.Range(0, SyntheticMatchGenerator.FrameCount).Select(generator.Generate));
+    var insight = known.FirstOrDefault(i => i.MatchId == request.MatchId && i.Id == request.InsightId);
+    if (insight is null) return Results.NotFound(new { error = "Insight is not available in this match scope." });
+    return Results.Ok(await explanations.Explain(insight, request.Audience, cancellationToken));
+}).RequireRateLimiting("explanations");
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
 app.MapGet("/api/match/moments", (SyntheticMatchGenerator generator, PassingLaneAnalyzer analyzer) =>
     Enumerable.Range(0, SyntheticMatchGenerator.FrameCount)

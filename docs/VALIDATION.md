@@ -116,3 +116,43 @@ See SCENARIO_REPLAY.md for semantics and football realism limitations.
 
 See DEFENSIVE_INSIGHTS.md for ranking weights, grouping windows, snapshot
 selection semantics, endpoint contracts and analytical limitations.
+
+## Foundry narration (2026-10-23)
+
+- `dotnet build src/api/InvisibleDefender.slnx --no-restore`: passed, zero warnings/errors.
+- `dotnet run --project tests/Analytics.Tests --no-build --no-restore`: 113 checks passed (79 existing analytics/counterfactual/replay checks and 34 narration checks). Covers evidence construction, both audiences, schema/relevance/evidence-ID/numeric rejection, fallback, timeout, missing configuration, unchanged analytics, fake authenticated v1 transport, server cache reuse across callers, concurrent deduplication, expiration, evidence/deployment/prompt invalidation and invalid-output non-caching.
+- `npm.cmd --prefix src/web run build`: passed; existing SignalR annotation warnings remain.
+- `npm.cmd --prefix src/web test`: all 4 tests passed. The App lifecycle test now includes explicit-only generation, audience round trips and stale responses, disabled in-flight button, labeled fallback and full simulated playback while generation remains pending.
+- Same frontend suite with `PITCH_API_URL=http://127.0.0.1:5080`: all 4 tests passed with real HTTP/SignalR. Includes selecting all five ranked moments without inference and the existing replay, frozen evidence, drag/reset and Resume regressions. B2's SVG Y position advanced 63.36 -> 63.44 -> 63.52 after Resume.
+- `node tests/Integration/smoke.mjs`: passed against the API, including real SignalR negotiation/delivery and analytical/counterfactual isolation.
+- `node tests/Integration/explanations.mjs`: passed against Provider=Disabled, including both audience fallbacks, preserved evidence, unknown insight/mode/scope/prompt rejection, independent HTTP 429 rate limiting and unaffected health endpoint.
+- Live Foundry inference was **not verified**. Automated tests require no Azure credentials. No cloud deployment or resource provisioning occurred. Native browser layout and pointer-capture QA was not performed.
+
+See [Foundry configuration and manual verification](FOUNDRY_EXPLANATIONS.md) for endpoint/authentication requirements, cache lifetime/size/invalidation and limitations of prose validation.
+
+
+## Foundry evidence grounding follow-up (2026-10-23)
+
+- Changed only narration implementation, narration regression checks and Foundry documentation in this follow-up. Playback, analytics, SignalR, counterfactual tools, cache architecture and rate limiting are unchanged.
+- Prompt version is `v2`; the existing cache key includes this version, so `v1` entries cannot be returned. Existing expiry, concurrency deduplication and invalid-output non-caching checks pass.
+- Foundry receives measurement semantics, epistemic categories and an evidence-specific approved narrative catalogue. Deterministic validation requires exact approved factual prose, units and values, complete evidence references, strict shape and audience limits. Non-catalogue wording falls back. This deliberately constrains Foundry to editorial selection rather than unrestricted prose generation.
+- `dotnet build src/api/InvisibleDefender.slnx --no-restore`: passed, zero warnings/errors.
+- `dotnet run --project tests/Analytics.Tests --no-build --no-restore`: **143 checks passed** (79 analytics and 64 narration checks). Added 30 checks covering all current insight/audience combinations, player-versus-segment distance, zero/contact, threshold/width, wrong units, derived-versus-observed claims, causal claims/intent, verbosity, analyst values, foreign IDs, old-version cache isolation and actual transport payload semantics/catalogue.
+- `npm.cmd --prefix src/web run build`: passed; existing SignalR Rollup annotation warnings remain.
+- `npm.cmd --prefix src/web test`: all 4 passed, both standalone and with `PITCH_API_URL=http://127.0.0.1:5080` (real HTTP/SignalR lifecycle).
+- `node tests/Integration/smoke.mjs`: passed.
+- `node tests/Integration/explanations.mjs`: passed with Provider=Disabled. Initial attempt encountered Windows Event Log write permission failure on deliberately invalid input; rerun passed with `Logging__EventLog__LogLevel__Default=None` set only for the local API test process. No application logging configuration changed.
+- Live Azure inference was not exercised; no resources were provisioned or deployed. All Foundry transport tests use fake credentials/HTTP.
+
+
+## Original Foundry narration v3 (2026-10-23)
+
+- Replaced approved paragraph selection with original generation from backend semantic facts; fallback catalogue retained locally.
+- Prompt/cache version v3 isolates v2 entries. Existing on-demand UI, authentication, transport, deduplication, cache and rate limits retained.
+- Backend executable: 156 checks passed, including original prose acceptance, fact references, numerical relationship rejection, audience separation, fallback, cache and transport payloads.
+- Backend build: passed without restore, zero warnings/errors. Restore was unnecessary; the default user NuGet configuration is inaccessible in this sandbox.
+- Frontend production build passed (existing SignalR Rollup annotation warnings); standalone frontend tests: 4 passed.
+- HTTP/SignalR smoke and explanation validation/fallback/rate-limit integration checks passed against a local Disabled-provider API.
+- API-backed frontend tests: 4 passed, including real SignalR playback lifecycle.
+- No live Foundry request completed; prose quality and actual deployment compatibility remain unverified. No deployment or provisioning performed.
+- Validation is structural/numeric plus conservative lexical screening. It cannot guarantee full semantic entailment for unrestricted prose; see FOUNDRY_EXPLANATIONS.md.

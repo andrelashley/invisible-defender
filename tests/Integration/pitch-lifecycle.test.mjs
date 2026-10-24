@@ -39,10 +39,12 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     HubConnectionState: { Disconnected: 'Disconnected' },
   };
   let realApi, replayCatalogue;
+  const explanationReplies = [];
   const originalFetch = globalThis.fetch;
   const originalPoint = globalThis.DOMPoint;
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options });
+    if (url === '/api/explanations') return new Promise(resolve => explanationReplies.push(resolve));
     if (realApi) return originalFetch(`${realApi}${url}`, options);
     if (url === '/api/match/replay' && !options?.method) return { ok: true, json: async () => replayCatalogue };
     if (url.endsWith('/resume')) server = { ...server, revision: server.revision + 1, status: 'running' };
@@ -50,7 +52,8 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     return { ok: true, json: async () => server };
   };
   globalThis.DOMPoint = class { constructor(x, y) { this.x = x; this.y = y; } matrixTransform() { return this; } };
-  const frame = (revision, timestamp, x) => ({ revision, status: 'running', frameIndex: timestamp * 2, frameCount: 120,
+  let revisionEpoch = 0;
+  const frame = (revision, timestamp, x) => ({ revision: revision + revisionEpoch, status: 'running', frameIndex: timestamp * 2, frameCount: 120,
     event: { id: `event-${timestamp}`, timestamp, teamId: 'A', ballPosition: { x: 20, y: 34 }, playerPositions: [
       { playerId: 'B2', teamId: 'B', position: { x, y: 30 } },
       { playerId: 'A1', teamId: 'A', position: { x: 20 + timestamp, y: 34 } },
@@ -82,6 +85,40 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     assert.equal(position(), 25, 'ranked selection displays the exact supporting observation');
     assert.ok(find(n => n.props['aria-label'] === 'Selected insight passing lane'), 'affected lane is highlighted');
     assert.equal(player().children.find(n => n.type === 'circle').props.r, 2.3, 'primary defender is highlighted');
+    const inferenceCalls = () => requests.filter(r => r.url === '/api/explanations').length;
+    assert.equal(inferenceCalls(), 0, 'load, SignalR and ranked selection never generate');
+    const audience = () => find(n => n.type === 'select');
+    audience().props.onChange({ target: { value: 'analyst' } }); render();
+    audience().props.onChange({ target: { value: 'casual' } }); render();
+    assert.equal(inferenceCalls(), 0, 'switching audiences never generates');
+    button('Generate AI Explanation').props.onClick(); render();
+    assert.equal(inferenceCalls(), 1, 'explicit click sends one request');
+    assert.equal(button('Generate AI Explanation').props.disabled, true, 'generation disabled while in progress');
+    // Keep SignalR delivery active during the unresolved inference.
+    for (let i = 0; i < 120; i++) { receive(frame(10 + i, i / 2, 40 + i / 10)); render(); }
+    assert.equal(slots[0].liveState.frameIndex, 119, 'entire match advances while inference is pending');
+    assert.equal(inferenceCalls(), 1, 'entire playback triggers zero additional inference');
+    audience().props.onChange({ target: { value: 'analyst' } }); render();
+    audience().props.onChange({ target: { value: 'casual' } }); render();
+    explanationReplies.shift()({ ok: true, json: async () => ({ source: 'generated', narrative: { title: 'STALE CASUAL', explanation: 'Wrong audience', evidenceEventIds: [], limitations: [] } }) });
+    await new Promise(resolve => setImmediate(resolve)); render();
+    assert.equal(find(n => n.children.includes('STALE CASUAL')), undefined, 'late response is rejected even after an audience round trip');
+    audience().props.onChange({ target: { value: 'analyst' } }); render();
+    button('Generate AI Explanation').props.onClick(); render();
+    explanationReplies.shift()({ ok: true, json: async () => ({ source: 'fallback', narrative: { title: 'VALID ANALYST', explanation: 'Deterministic evidence explanation', evidenceEventIds: ['e1'], limitations: ['Synthetic only'] } }) });
+    await new Promise(resolve => setImmediate(resolve)); render();
+    assert.ok(find(n => n.children.includes('VALID ANALYST')), 'current explanation is displayed');
+    assert.ok(find(n => n.children.includes('Deterministic fallback')), 'fallback source is visible');
+    button('Generate AI Explanation').props.onClick(); render();
+    button('Return to live').props.onClick(); render();
+    explanationReplies.shift()({ ok: true, json: async () => ({ source: 'generated', narrative: { title: 'STALE INSIGHT', explanation: 'Wrong insight', evidenceEventIds: [], limitations: [] } }) });
+    await new Promise(resolve => setImmediate(resolve)); render();
+    assert.equal(find(n => n.children.includes('STALE INSIGHT')), undefined, 'late response cannot reopen a cleared insight');
+    // Restore the baseline fixture and selection for existing replay/drag regressions.
+    server = { ...server, revision: 200 }; receive(server); render();
+    find(n => n.type === 'button' && n.children.includes('Defender B2 closes a passing lane')).props.onClick(); render();
+    revisionEpoch = 1000;
+
     button('Return to live').props.onClick(); render();
     assert.equal(position(), 40, 'ranked selection returns to live');
     const timelineButton = find(n => n.type === 'button' && n.children.some(c => typeof c === 'string' && c.includes('Midfield screen')));
@@ -128,8 +165,11 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     assert.equal(position(), 48); assert.equal(server.event.timestamp, 11); assert.equal(server.status, 'running');
     assert.equal(requests.length, beforeReset, 'reset makes no playback request');
     receive(frame(6, 10.5, 45)); render(); assert.equal(position(), 48, 'stale responses cannot rewind live display');
-    assert.deepEqual(requests.filter(r => r.options?.method === 'POST').map(r => r.url), ['/api/match/pause', '/api/match/resume']);
+    assert.deepEqual(requests.filter(r => r.options?.method === 'POST' && r.url !== '/api/explanations').map(r => r.url), ['/api/match/pause', '/api/match/resume']);
     if (process.env.PITCH_API_URL) {
+      // Start a fresh live-state fixture before switching from synthetic revisions to the real server.
+      slots[0] = { ...slots[0], liveState: undefined };
+      render();
       const positionY = () => player().children.find(n => n.type === 'circle').props.cy;
       realApi = process.env.PITCH_API_URL;
       const request = async command => (await originalFetch(`${realApi}/api/match${command ? '/' + command : ''}`, command ? { method: 'POST' } : undefined)).json();
@@ -159,6 +199,11 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
         const ranked = catalogue.insights.find(i => i.isKeyMoment);
         await button('Browse complete synthetic replay').props.onClick();
         await until(() => { render(); return !!find(n => n.type === 'button' && n.children.includes(ranked.title)); }, 'real replay catalogue renders');
+        const beforeSelections = requests.filter(r => r.url === '/api/explanations').length;
+        for (const item of catalogue.insights.filter(i => i.isKeyMoment).slice(0, 5)) {
+          find(n => n.type === 'button' && n.children.includes(item.title)).props.onClick(); render();
+        }
+        assert.equal(requests.filter(r => r.url === '/api/explanations').length, beforeSelections, 'selecting all five real ranked moments triggers zero inference');
         find(n => n.type === 'button' && n.children.includes(ranked.title)).props.onClick(); render();
         assert.equal(positionY(), ranked.observation.playerPositions.find(p => p.playerId === 'B2').position.y, 'real ranked insight displays exact evidence positions');
         assert.ok(find(n => n.type === 'pre').children[0].includes(ranked.triggerEvent.id), 'real outcome event is retained in evidence');

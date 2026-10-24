@@ -161,3 +161,6 @@ Check(detected.Where(i => i.InsightType is "AttackingRedirection" or "DefensiveR
 Check(transitions.Single(i => i.InsightType == "PassingLaneDenial").PreviousMeasurements!.DefenderDistanceMetres == 6, "Available-lane distance is retained before closure");
 Console.WriteLine($"{passed} analytical tests passed.");
 
+
+await NarrationChecks.Run(Check);
+Console.WriteLine($"{passed} total backend checks passed.");
