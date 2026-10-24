@@ -1,3 +1,4 @@
+import { visitor } from './visitor.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
@@ -38,14 +39,14 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
     HubConnectionBuilder: class { withUrl() { return this; } withAutomaticReconnect() { return this; } build() { return hub; } },
     HubConnectionState: { Disconnected: 'Disconnected' },
   };
-  let realApi, replayCatalogue;
+  let realApi, realClient, replayCatalogue;
   const explanationReplies = [];
   const originalFetch = globalThis.fetch;
   const originalPoint = globalThis.DOMPoint;
   globalThis.fetch = async (url, options) => {
     requests.push({ url, options });
     if (url === '/api/explanations') return new Promise(resolve => explanationReplies.push(resolve));
-    if (realApi) return originalFetch(`${realApi}${url}`, options);
+    if (realApi) return realClient.fetch(url, options);
     if (url === '/api/match/replay' && !options?.method) return { ok: true, json: async () => replayCatalogue };
     if (url.endsWith('/resume')) server = { ...server, revision: server.revision + 1, status: 'running' };
     if (url.endsWith('/pause')) server = { ...server, revision: server.revision + 1, status: 'paused' };
@@ -172,9 +173,10 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
       render();
       const positionY = () => player().children.find(n => n.type === 'circle').props.cy;
       realApi = process.env.PITCH_API_URL;
-      const request = async command => (await originalFetch(`${realApi}/api/match${command ? '/' + command : ''}`, command ? { method: 'POST' } : undefined)).json();
-      const negotiation = await (await originalFetch(`${realApi}/hubs/match/negotiate?negotiateVersion=1`, { method: 'POST' })).json();
-      const ws = new WebSocket(`${realApi.replace(/^http/, 'ws')}/hubs/match?id=${encodeURIComponent(negotiation.connectionToken)}`);
+      realClient = visitor(realApi, originalFetch);
+      const request = async command => (await realClient.fetch(`/api/match${command ? '/' + command : ''}`, command ? { method: 'POST' } : undefined)).json();
+      const negotiation = await (await realClient.fetch(`/hubs/match/negotiate?negotiateVersion=1`, { method: 'POST' })).json();
+      const ws = realClient.socket(`/hubs/match?id=${encodeURIComponent(negotiation.connectionToken)}`);
       const until = async (predicate, label) => {
         const deadline = Date.now() + 15000;
         while (!predicate()) { assert.ok(Date.now() < deadline, label); await new Promise(resolve => setTimeout(resolve, 20)); }
@@ -195,7 +197,7 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
         await until(() => latest?.event.timestamp >= 10, 'playback reaches 10 seconds');
         await button('Pause').props.onClick(); await until(() => latest.status === 'paused', 'pause broadcast'); render();
         const paused = await request();
-        const catalogue = await (await originalFetch(`${realApi}/api/match/replay`)).json();
+        const catalogue = await (await realClient.fetch(`/api/match/replay`)).json();
         const ranked = catalogue.insights.find(i => i.isKeyMoment);
         await button('Browse complete synthetic replay').props.onClick();
         await until(() => { render(); return !!find(n => n.type === 'button' && n.children.includes(ranked.title)); }, 'real replay catalogue renders');
@@ -215,8 +217,7 @@ test('rendered pitch: live / pause at 10s / B2 drag into and out of lane / resum
         assert.deepEqual(await request(), paused, 'ranked selection and drag do not mutate shared playback');
         const actualX = positionY();
         player().props.onPointerDown(pointer); render(); drag(30, 34);
-        await new Promise(resolve => setTimeout(resolve, 120)); render();
-        assert.ok(find(n => n.type === 'table'), 'real counterfactual comparison renders');
+        await until(() => { render(); return !!find(n => n.type === 'table'); }, 'real counterfactual comparison renders');
         drag(80, 60);
         assert.equal(positionY(), actualX, 'real observation stays frozen');
         assert.deepEqual(await request(), paused, 'real server remains unchanged by dragging');

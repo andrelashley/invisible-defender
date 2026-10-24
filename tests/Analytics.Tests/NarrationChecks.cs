@@ -15,12 +15,16 @@ public static class NarrationChecks
         if (Environment.GetEnvironmentVariable("NARRATION_LIVE_CHECK") == "1") {
             var liveOptions = new NarrationOptions { Endpoint = Environment.GetEnvironmentVariable("Narration__Endpoint") ?? "", Deployment = Environment.GetEnvironmentVariable("Narration__Deployment") ?? "" };
             var live = new FoundryNarrator(new HttpClient(), new Azure.Identity.DefaultAzureCredential(), Options.Create(liveOptions));
+            var allLiveValid = true;
             foreach (var audience in new[] { "casual", "analyst" }) {
                 var evidence = EvidenceBuilder.Build(insights.First(i => i.IsKeyMoment));
                 var raw = await live.Generate(evidence, audience, default);
                 Console.WriteLine("LIVE " + audience + " " + raw);
-                check(NarrativeValidator.Parse(raw, evidence, audience, (rule, field) => Console.WriteLine("REJECT " + rule + " " + field)) is not null, "Live Foundry validation " + audience);
+                var valid = NarrativeValidator.Parse(raw, evidence, audience, (rule, field) => Console.WriteLine("REJECT " + audience + " " + rule + " " + field)) is not null;
+                Console.WriteLine("LIVE VALID " + audience + " " + valid);
+                allLiveValid &= valid;
             }
+            check(allLiveValid, "Live Foundry validation for both audiences");
         }
         using (var captured = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "LiveNarrationRegression.json")))) {
             var liveEvidence = EvidenceBuilder.Build(insights.First(i => i.IsKeyMoment));

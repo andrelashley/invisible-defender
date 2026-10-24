@@ -15,10 +15,10 @@ Configuration is under `Narration` in ASP.NET Core configuration. Environment va
 | `Narration__Deployment` | empty | Existing GPT-4.1 mini deployment name (may differ from model name). |
 | `Narration__ManagedIdentity` | `false` | Set `true` in Azure to exclusively use managed identity. |
 | `Narration__ManagedIdentityClientId` | unset | Optional user-assigned managed identity client ID; otherwise system-assigned. |
-| `Narration__MaxOutputTokens` | `650` | Clamped to 128–2000. |
-| `Narration__TimeoutSeconds` | `15` | Total authentication/inference timeout, clamped to 1–60 seconds. No model retries. |
-| `Narration__CacheExpirationSeconds` | `3600` | Absolute expiration, clamped to 1–86400 seconds. |
-| `Narration__CacheSize` | `256` | Maximum cached entries, clamped to 1–10000. |
+| `Narration__MaxOutputTokens` | `650` | Clamped to 128â€“2000. |
+| `Narration__TimeoutSeconds` | `15` | Total authentication/inference timeout, clamped to 1â€“60 seconds. No model retries. |
+| `Narration__CacheExpirationSeconds` | `3600` | Absolute expiration, clamped to 1â€“86400 seconds. |
+| `Narration__CacheSize` | `256` | Maximum cached entries, clamped to 1â€“10000. |
 
 Only set these on the API. Never put credentials or configuration secrets in Vite variables. There is no API-key requirement or API-key storage. For local development, `DefaultAzureCredential` supports Azure CLI (`az login`), developer tooling or standard Azure.Identity environment credentials. In Azure use `ManagedIdentityCredential`, with permission to invoke the existing resource (typically Cognitive Services OpenAI User). Assigning roles or enabling identity is outside this task. Keep any service-principal secret in user secrets/environment configuration, never source control.
 
@@ -48,7 +48,7 @@ The singleton explanation service owns a bounded, process-local `MemoryCache`. K
 
 Only validated Foundry successes enter the cache. Fallbacks, failures, timeouts, invalid generations and local mock responses are not cached as AI. Concurrent identical requests share a `Lazy<Task>` operation. Cache is checked before generation and again inside the shared operation to avoid completion races. Disconnecting one caller does not cancel another caller's shared inference; the total timeout still bounds work. Cached results are shared by browser refreshes and separate sessions, with no browser storage dependency. Expiration triggers no inference by itself: a fresh explicit request is required.
 
-Cache is cleared by process restart and is not shared across instances. No Redis, persistence, database, credentials or bearer tokens are stored in it. Rate limiting applies before the cache: 12 requests per remote IP per minute, plus at most 8 concurrent explanation HTTP requests globally, no queue. HTTP 429 asks the user to retry later. Playback endpoints are excluded. Behind a reverse proxy, remote-IP limiting may group viewers; configure trusted forwarded headers for a production host. This public MVP has no user authentication or per-account quota.
+Cache is cleared by process restart and is not shared across instances. No Redis, persistence, database, credentials or bearer tokens are stored in it. Rate limiting applies before the cache: 12 requests per process per minute and per remote IP per minute, plus at most 8 concurrent explanation HTTP requests globally, no queue. The process-wide ceiling also applies when ingress proxies rotate remote addresses. HTTP 429 asks the user to retry later. Playback endpoints are excluded. Behind a reverse proxy, remote-IP limiting may group viewers; configure trusted forwarded headers for a production host. This public MVP has no user authentication or per-account quota.
 
 ## Validation and manual inference
 

@@ -1,9 +1,11 @@
+import { visitor } from './visitor.mjs';
 ﻿// Node 22.12+/24 built-ins only. Start the API on port 5080 before running.
 import assert from 'node:assert/strict';
 const base = process.env.API_URL ?? 'http://127.0.0.1:5080';
+const client = visitor(base);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function request(path, method = 'GET') {
-  const response = await fetch(`${base}${path}`, { method });
+  const response = await client.fetch(path, { method });
   assert.equal(response.ok, true, `${method} ${path}: ${response.status}`);
   return response.json();
 }
@@ -32,7 +34,7 @@ for (const insight of catalogue.insights) {
   }
 }
 const negotiation = await request('/hubs/match/negotiate?negotiateVersion=1', 'POST');
-const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/hubs/match?id=${encodeURIComponent(negotiation.connectionToken)}`);
+const ws = client.socket(`/hubs/match?id=${encodeURIComponent(negotiation.connectionToken)}`);
 let handshake = false;
 let messages = [];
 ws.addEventListener('message', event => {
@@ -59,7 +61,7 @@ try {
   const stable = await request('/api/match');
   assert.equal(stable.frameIndex, paused.frameIndex);
   assert.equal(stable.revision, paused.revision);
-  const hypotheticalResponse = await fetch(`${base}/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+  const hypotheticalResponse = await client.fetch(`/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ frame: stable.event, defenderId: 'B1', position: { x: 0, y: 0 } }) });
   assert.equal(hypotheticalResponse.status, 200);
   const hypothetical = await hypotheticalResponse.json();
@@ -67,13 +69,13 @@ try {
   assert.deepEqual(hypothetical.actualPosition, stable.event.playerPositions.find(p => p.playerId === 'B1').position);
   assert.deepEqual(hypothetical.hypotheticalPosition, { x: 0, y: 0 });
   assert.deepEqual(await request('/api/match'), stable, 'Hypothetical analysis must not mutate playback');
-  const rejected = await fetch(`${base}/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+  const rejected = await client.fetch(`/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ frame: stable.event, defenderId: 'A1', position: { x: 0, y: 0 } }) });
   assert.equal(rejected.status, 400);
   const resumed = await request('/api/match/resume', 'POST');
   assert.equal(resumed.status, 'running');
   await until(() => messages.some(m => m.revision > resumed.revision && m.frameIndex > paused.frameIndex), 'resumed delivery');
-  const duringPlayback = await fetch(`${base}/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+  const duringPlayback = await client.fetch(`/api/counterfactual`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ frame: stable.event, defenderId: 'B1', position: { x: 50, y: 30 } }) });
   assert.equal(duringPlayback.status, 200);
   const revisionBefore = (await request('/api/match')).revision;
@@ -96,7 +98,7 @@ try {
     assert.ok(state.event.playerPositions.some(p => p.playerId === c.defenderId));
   }
   for (let i = 1; i < messages.length; i++) assert.ok(messages[i].revision >= messages[i - 1].revision);
-  const invalid = await fetch(`${base}/api/match/invalid`, { method: 'POST' });
+  const invalid = await client.fetch(`/api/match/invalid`, { method: 'POST' });
   assert.equal(invalid.status, 400);
   console.log('PASS: API health, SignalR handshake/delivery, start, pause stability, resume, repeatable replay, evidence links, ordered revisions, invalid command, counterfactual isolation/validation, live playback during analysis.');
 } finally {

@@ -96,6 +96,7 @@ function App() {
     hub.onclose(() => { if (!disposed) setConnection('Disconnected — reload to reconnect'); });
     async function connect() {
       try {
+        await refresh();
         await hub.start();
         if (disposed) { await hub.stop(); return; }
         setConnection('Live'); await refresh();

@@ -1,5 +1,9 @@
 # Validation results
 
+## Azure deployment verification (2026-10-24)
+
+Production Docker build/run, all 163 ordinary backend checks, frontend build, four frontend checks, and local/public HTTP plus real SignalR suites passed. Public playback/replay, evidence, counterfactual isolation, two-visitor REST/WSS isolation, fallback/outage recovery, rate limiting and API-backed SVG lifecycle passed. Foundry was restored after outage testing; final app is healthy with one replica. Public Casual Fan generation and independent-visitor backend caching passed. Public Analyst requests repeatedly fell back, so the strict two-audience live Foundry suite remains failing. Local opt-in live diagnostics also reproduce variable prose validation; ordinary regressions pass. No native browser surface was available. See [deployment results and remaining issues](DEPLOYMENT.md).
+
 - `dotnet build src/api/InvisibleDefender.slnx --no-restore`: passed, zero warnings and errors.
 - `dotnet run --project tests/Analytics.Tests --no-build --no-restore`: all 22 analytical checks passed. This dependency-free executable exits nonzero on a failure; it is not a test-adapter project and is not run by `dotnet test`.
 - `node tests/Integration/smoke.mjs` against the running API: passed. Checks HTTP health, actual SignalR WebSocket negotiation and JSON handshake, live updates, pause stability, resume, replay repeatability, evidence links, ordered revisions, and invalid-command rejection.
@@ -156,3 +160,18 @@ See [Foundry configuration and manual verification](FOUNDRY_EXPLANATIONS.md) for
 - API-backed frontend tests: 4 passed, including real SignalR playback lifecycle.
 - No live Foundry request completed; prose quality and actual deployment compatibility remain unverified. No deployment or provisioning performed.
 - Validation is structural/numeric plus conservative lexical screening. It cannot guarantee full semantic entailment for unrestricted prose; see FOUNDRY_EXPLANATIONS.md.
+
+
+## Production hosting preparation (2026-10-24)
+
+- Backend build: passed, zero warnings/errors. All 163 backend checks passed; analytical algorithms and prompt v3.1 unchanged.
+- Frontend production build and all 4 tests passed. Existing SignalR annotation warnings remain.
+- Published Release API served compiled React assets without Vite in Production with Provider=Disabled and no Azure credentials.
+- HTTP/SignalR smoke passed with cookie-aware REST and real WebSocket delivery: playback controls, prefix evidence, replay, counterfactual validation/isolation.
+- Frontend suite with PITCH_API_URL passed all 4 tests; real SVG B2 Y advanced 63.36 -> 63.44 -> 63.52 after Resume.
+- Explanation HTTP suite passed: both audience deterministic fallbacks, known evidence, invalid insight/prompt/mode/scope rejection and rate limiting.
+- New production smoke passed: index and nested SPA route, bundled assets, API/hub 404s, rejected foreign REST/WebSocket origins, malformed input without internal traces, and two independent cookie visitors. One visitor's pause/replay and SignalR broadcasts did not alter the other.
+- Azure CLI read-only inventory verified existing AIServices account, endpoint, healthy model deployment and actual inference-role dataActions. No hosting/registry/Log Analytics resources exist in the subscription. Deployment script discovery mode passed against the actual subscription; apply has not run.
+- Docker is not installed/on PATH (nor at its standard Windows installation path). Docker image build/run/smoke remain blocked, not passed.
+- Browser tool inventory returned no browsers/apps. Native layout/pointer-capture QA remains pending.
+- No Azure resources created or updated, no public URL verified, no deployed managed-identity inference tested. Public Foundry/cache and outage checks remain release gates. See DEPLOYMENT.md.

@@ -4,7 +4,7 @@ const base = process.env.API_URL ?? 'http://127.0.0.1:5080';
 const catalogue = await (await fetch(`${base}/api/match/replay`)).json();
 const insight = catalogue.insights.find(i => i.isKeyMoment);
 const payload = { matchId: insight.matchId, insightId: insight.id, audience: 'casual', scope: 'replay' };
-const send = body => fetch(`${base}/api/explanations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const send = (body, headers = {}) => fetch(`${base}/api/explanations`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
 for (const audience of ['casual', 'analyst']) {
   const response = await send({ ...payload, audience });
   assert.equal(response.status, 200);
@@ -17,7 +17,9 @@ assert.equal((await send({ ...payload, audience: 'arbitrary prompt' })).status, 
 assert.equal((await send({ ...payload, insightId: 'unknown' })).status, 404);
 assert.equal((await send({ ...payload, prompt: 'invent stats' })).status, 400);
 assert.equal((await send({ ...payload, scope: 'unknown' })).status, 400);
-const statuses = await Promise.all(Array.from({ length: 15 }, async () => (await send(payload)).status));
+const statuses = await Promise.all(Array.from({ length: 15 }, async (_, i) => (await send(payload, { 'X-Forwarded-For': `192.0.2.${i + 1}` })).status));
 assert.ok(statuses.includes(429), 'server rate limit is independent of button state');
+assert.ok(statuses.every(status => status === 200 || status === 429), 'burst only succeeds or is rate limited');
+assert.ok(statuses.filter(status => status === 200).length <= 12, 'rotating forwarded addresses cannot bypass the process-wide ceiling');
 assert.equal((await fetch(`${base}/api/health`)).status, 200, 'rate limit does not block playback APIs');
 console.log('Explanation HTTP validation, evidence-preserving fallback and rate limit passed.');
