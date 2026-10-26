@@ -85,4 +85,4 @@ Screenshots have not been supplied. Submission placeholders:
 
 ## License
 
-A license decision is pending. No license has been selected or added; public visibility alone does not grant an open-source license.
+Licensed under the [MIT License](LICENSE). Copyright (c) 2026 André Lashley.
