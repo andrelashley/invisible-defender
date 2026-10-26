@@ -17,6 +17,10 @@ dist/
 .dotnet/
 .dotnet-home/
 .local-appdata/
+.agents/
+.codex/
+.azure/
+.aws/
 
 # Secrets and environment configuration
 .env
@@ -24,11 +28,22 @@ dist/
 !.env.example
 appsettings.Development.json
 appsettings.Local.json
+appsettings.*.json
+!appsettings.*.example.json
 secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
 
 # Logs and temporary files
 *.log
 *.tmp
+*.binlog
+TestResults/
+coverage/
+.DS_Store
+Thumbs.db
 
 # Production verification artifacts
 .artifacts/
