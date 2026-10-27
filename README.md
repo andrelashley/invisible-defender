@@ -77,11 +77,24 @@ This is a bounded demonstration, not a calibrated player evaluation system. Coar
 
 ## Screenshots
 
-Screenshots have not been supplied. Submission placeholders:
+### Live Match Intelligence
+Real-time synthetic match playback with defensive
+passing-lane analysis and ranked insights.
 
-- **Pitch and key moments:** replay with a selected defender and supporting evidence.
-- **Counterfactual comparison:** actual/hypothetical positions and lane comparison table.
-- **Grounded explanation:** Analyst commentary alongside server-verified facts.
+![Invisible Defender live match](docs/screenshots/live-match.png)
+
+### Interactive Counterfactual Analysis
+Explore how repositioning a defender changes
+available passing options.
+
+![Defensive counterfactual analysis](docs/screenshots/counterfactual.png)
+
+### AI-Powered Explanations
+Microsoft Foundry generates evidence-grounded
+explanations for casual fans and analysts.
+
+![AI-generated defensive explanation](docs/screenshots/ai-explanation.png)
+
 
 ## License
 
